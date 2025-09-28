@@ -44,3 +44,12 @@ def index():
 ######################################################################
 
 # Todo: Place your REST API code here ...
+
+@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
+def get_wishlist(wishlist_id):
+    """Read a wishlist by ID"""
+    app.logger.info(f"Request to read wishlist with id: {wishlist_id}")
+    wishlist = YourResourceModel.find(wishlist_id)
+    if not wishlist:
+        return jsonify({"error": f"Wishlist with id {wishlist_id} was not found."}), status.HTTP_404_NOT_FOUND
+    return jsonify(wishlist.serialize()), status.HTTP_200_OK
