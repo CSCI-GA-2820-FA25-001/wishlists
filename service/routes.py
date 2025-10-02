@@ -49,21 +49,22 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
-@app.route('/wishlists', methods=['GET'])
+
+@app.route("/wishlists", methods=["GET"])
 def get_wishlists():
-    """ Returns all of the Wishlists """
-    app.logger.info('Request for wishlists for customer %s', STATE_CUSTOMER_ID)
+    """Returns all of the Wishlists"""
+    app.logger.info("Request for wishlists for customer %s", STATE_CUSTOMER_ID)
     wishlists = Wishlists.find_all_by_customer_id(STATE_CUSTOMER_ID)
     results = [wishlist.serialize() for wishlist in wishlists]
     return jsonify(results), status.HTTP_200_OK
 
-@app.route('/wishlists', methods=['POST'])
+
+@app.route("/wishlists", methods=["POST"])
 def create_wishlist():
-    """ Creates a Wishlist """
-    app.logger.info('Request to create a wishlist for customer %s', STATE_CUSTOMER_ID)
+    """Creates a Wishlist"""
+    app.logger.info("Request to create a wishlist for customer %s", STATE_CUSTOMER_ID)
     if not request.is_json:
-        abort(status.HTTP_400_BAD_REQUEST, 'Request body must be JSON')
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON")
     data = request.get_json()
     wishlist = Wishlists()
     try:
@@ -73,31 +74,43 @@ def create_wishlist():
     wishlist.customer_id = STATE_CUSTOMER_ID
     wishlist.create()
     message = wishlist.serialize()
-    location_url = url_for('get_wishlist', wishlist_id=wishlist.id, _external=True)
-    return jsonify(message), status.HTTP_201_CREATED, {'Location': location_url}
+    location_url = url_for("get_wishlist", wishlist_id=wishlist.id, _external=True)
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
-@app.route('/wishlists/<int:wishlist_id>', methods=['GET'])
+
+@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
 def get_wishlist(wishlist_id):
-    """ Returns a Wishlist """
-    app.logger.info('Request for wishlist %s for customer %s', wishlist_id, STATE_CUSTOMER_ID)
+    """Returns a Wishlist"""
+    app.logger.info(
+        "Request for wishlist %s for customer %s", wishlist_id, STATE_CUSTOMER_ID
+    )
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND, f'Wishlist with id {wishlist_id} not found')
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN, f'Access to wishlist id {wishlist_id} is forbidden')
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            f"Access to wishlist id {wishlist_id} is forbidden",
+        )
     return jsonify(wishlist.serialize()), status.HTTP_200_OK
 
-@app.route('/wishlists/<int:wishlist_id>', methods=['PUT'])
+
+@app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
 def update_wishlist(wishlist_id):
-    """ Updates a Wishlist """
-    app.logger.info('Request to update wishlist %s for customer %s', wishlist_id, STATE_CUSTOMER_ID)
+    """Updates a Wishlist"""
+    app.logger.info(
+        "Request to update wishlist %s for customer %s", wishlist_id, STATE_CUSTOMER_ID
+    )
     if not request.is_json:
-        abort(status.HTTP_400_BAD_REQUEST, 'Request body must be JSON')
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON")
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND, f'Wishlist with id {wishlist_id} not found')
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN, f'Access to wishlist id {wishlist_id} is forbidden')
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            f"Access to wishlist id {wishlist_id} is forbidden",
+        )
     data = request.get_json()
     try:
         wishlist.deserialize(data)
@@ -109,21 +122,29 @@ def update_wishlist(wishlist_id):
     wishlist.update()
     return jsonify(wishlist.serialize()), status.HTTP_200_OK
 
-@app.route('/wishlists/<int:wishlist_id>/items', methods=['POST'])
+
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["POST"])
 def add_wishlist_item(wishlist_id):
-    """ Adds an item to a Wishlist """
-    app.logger.info('Request to add item to wishlist %s for customer %s', wishlist_id, STATE_CUSTOMER_ID)
+    """Adds an item to a Wishlist"""
+    app.logger.info(
+        "Request to add item to wishlist %s for customer %s",
+        wishlist_id,
+        STATE_CUSTOMER_ID,
+    )
     if not request.is_json:
-        abort(status.HTTP_400_BAD_REQUEST, 'Request body must be JSON')
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON")
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND, f'Wishlist with id {wishlist_id} not found')
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN, f'Access to wishlist id {wishlist_id} is forbidden')
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            f"Access to wishlist id {wishlist_id} is forbidden",
+        )
     data = request.get_json()
-    product_id = data.get('product_id')
+    product_id = data.get("product_id")
     if not product_id:
-        abort(status.HTTP_400_BAD_REQUEST, 'Product ID is required')
+        abort(status.HTTP_400_BAD_REQUEST, "Product ID is required")
     # Determine the next position
     last_position = WishlistItems.find_last_position(wishlist_id)
     item = WishlistItems()
@@ -133,9 +154,14 @@ def add_wishlist_item(wishlist_id):
         item.position = last_position + 1000
 
         # Check if the product is already in the wishlist
-        existing_items = WishlistItems.find_by_wishlist_and_product(wishlist_id, item.product_id)
+        existing_items = WishlistItems.find_by_wishlist_and_product(
+            wishlist_id, item.product_id
+        )
         if existing_items:
-            abort(status.HTTP_409_CONFLICT, f'Product ID {product_id} is already in wishlist id {wishlist_id}')
+            abort(
+                status.HTTP_409_CONFLICT,
+                f"Product ID {product_id} is already in wishlist id {wishlist_id}",
+            )
     except DataValidationError as e:
         abort(status.HTTP_400_BAD_REQUEST, str(e))
     item.create()
@@ -143,21 +169,42 @@ def add_wishlist_item(wishlist_id):
     # Update the wishlist's updated_date
     wishlist.updated_date = date.fromisoformat(date.today().isoformat())
     wishlist.update()
-    
-    # location is /wishlists/{wishlist_id}/items/{product_id}
-    location_url = url_for('get_wishlist_item', wishlist_id=wishlist_id, product_id=product_id, _external=True)
-    return jsonify(item.serialize()), status.HTTP_201_CREATED, {'Location': location_url}
 
-@app.route('/wishlists/<int:wishlist_id>/items/<int:product_id>', methods=['GET'])
+    # location is /wishlists/{wishlist_id}/items/{product_id}
+    location_url = url_for(
+        "get_wishlist_item",
+        wishlist_id=wishlist_id,
+        product_id=product_id,
+        _external=True,
+    )
+    return (
+        jsonify(item.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
+
+@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["GET"])
 def get_wishlist_item(wishlist_id, product_id):
-    """ Returns a Wishlist Item """
-    app.logger.info('Request for item %s in wishlist %s for customer %s', product_id, wishlist_id, STATE_CUSTOMER_ID)
+    """Returns a Wishlist Item"""
+    app.logger.info(
+        "Request for item %s in wishlist %s for customer %s",
+        product_id,
+        wishlist_id,
+        STATE_CUSTOMER_ID,
+    )
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND, f'Wishlist with id {wishlist_id} not found')
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN, f'Access to wishlist id {wishlist_id} is forbidden')
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            f"Access to wishlist id {wishlist_id} is forbidden",
+        )
     item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
     if not item:
-        abort(status.HTTP_404_NOT_FOUND, f'Product ID {product_id} not found in wishlist id {wishlist_id}')
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product ID {product_id} not found in wishlist id {wishlist_id}",
+        )
     return jsonify(item.serialize()), status.HTTP_200_OK

@@ -98,3 +98,33 @@ def internal_server_error(error):
         ),
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
+
+
+@app.errorhandler(status.HTTP_409_CONFLICT)
+def conflict(error):
+    """Handles conflict errors with 409_CONFLICT"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=status.HTTP_409_CONFLICT,
+            error="Conflict",
+            message=message,
+        ),
+        status.HTTP_409_CONFLICT,
+    )
+
+
+@app.errorhandler(status.HTTP_403_FORBIDDEN)
+def forbidden(error):
+    """Handles forbidden errors with 403_FORBIDDEN"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=status.HTTP_403_FORBIDDEN,
+            error="Forbidden",
+            message=message,
+        ),
+        status.HTTP_403_FORBIDDEN,
+    )
