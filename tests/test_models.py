@@ -346,3 +346,133 @@ class TestWishlistsModel(TestCase):
         """It should raise DataValidationError when repositioning items in a non-existent Wishlist"""
         with self.assertRaises(DataValidationError):
             Wishlists.reposition(9999)  # Non-existent wishlist_id
+
+    def test_move_wishlist_item(self):
+        """It should move a WishlistItem to a new position in the Wishlist"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        SIZE = 5
+        # Create items with sequential positions
+        for i in range(SIZE):
+            item = WishlistItemsFactory(wishlist_id=wishlist.id)
+            item.position = (i + 1) * 1000
+            item.create()
+        found_items = sorted(
+            WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
+        )
+        self.assertEqual(len(found_items), SIZE)
+
+        # Move the last item to the second position
+        item_to_move = found_items[-1]
+        before_position = found_items[1].position
+        moved_item = Wishlists.move_item(
+            wishlist.id, item_to_move.product_id, before_position
+        )
+        self.assertEqual(moved_item.product_id, item_to_move.product_id)
+        # Verify the new order of items
+        new_positions = [
+            item.position for item in WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        ]
+        self.assertEqual(new_positions, [1000, 1500, 2000, 3000, 4000])
+
+        # Move the 4th item (3rd item in found_items) before 2000 (2nd item in found_items)
+        item_to_move = found_items[2]
+        before_position = found_items[1].position
+        moved_item = Wishlists.move_item(
+            wishlist.id, item_to_move.product_id, before_position
+        )
+        self.assertEqual(moved_item.product_id, item_to_move.product_id)
+        # Verify the new order of items
+        new_positions = [
+            item.position for item in WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        ]
+        self.assertEqual(new_positions, [1000, 1500, 1750, 2000, 4000])
+
+    def test_move_wishlist_item_reposition(self):
+        """It should trigger repositioning when moving an item to a conflicting position"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        SIZE = 3
+        # Create items with sequential positions
+        for i in range(SIZE):
+            item = WishlistItemsFactory(wishlist_id=wishlist.id)
+            item.position = i + 1
+            item.create()
+        found_items = sorted(
+            WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
+        )
+        self.assertEqual(len(found_items), SIZE)
+
+        # Move the last item to the position of the first item, causing a conflict
+        item_to_move = found_items[-1]
+        before_position = found_items[0].position
+        moved_item = Wishlists.move_item(
+            wishlist.id, item_to_move.product_id, before_position
+        )
+
+        new_positions = [
+            item.position for item in WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        ]
+
+        self.assertEqual(new_positions, [500, 1000, 2000])
+        self.assertEqual(moved_item.position, 500)
+
+    def test_move_wishlist_item_first(self):
+        """It should move a WishlistItem to the front of the Wishlist"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        SIZE = 2
+        # Create items with sequential positions
+        for i in range(SIZE):
+            item = WishlistItemsFactory(wishlist_id=wishlist.id)
+            item.position = (i + 1) * 1000
+            item.create()
+        found_items = sorted(
+            WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
+        )
+        self.assertEqual(len(found_items), SIZE)
+
+        # Move the last item to the front
+        item_to_move = found_items[-1]
+        before_position = found_items[0].position
+        moved_item = Wishlists.move_item(
+            wishlist.id, item_to_move.product_id, before_position
+        )
+
+        new_positions = [
+            item.position for item in WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        ]
+        self.assertEqual(new_positions, [500, 1000])
+        self.assertEqual(moved_item.position, 500)
+
+    def test_move_wishlist_item_last(self):
+        """It should move a WishlistItem to the end of the Wishlist"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        SIZE = 2
+        # Create items with sequential positions
+        for i in range(SIZE):
+            item = WishlistItemsFactory(wishlist_id=wishlist.id)
+            item.position = i + 1
+            item.create()
+        found_items = sorted(
+            WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
+        )
+        self.assertEqual(len(found_items), SIZE)
+
+        # Move the first item to the end
+        item_to_move = found_items[0]
+        before_position = 9999  # A position greater than any existing position
+        moved_item = Wishlists.move_item(
+            wishlist.id, item_to_move.product_id, before_position
+        )
+
+        new_positions = [
+            item.position for item in WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        ]
+        self.assertEqual(new_positions, [2, 1002])
+        self.assertEqual(moved_item.position, 1002)

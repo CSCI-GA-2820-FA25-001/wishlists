@@ -1,5 +1,5 @@
 ######################################################################
-# Copyright 2016, 2024 John J. Rofrano. All Rights Reserved.
+# Copyright 2025 Dingwen Wang. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,7 +72,11 @@ class WishlistItems(db.Model, PersistentBase):
     @classmethod
     def find_all_by_wishlist_id(cls, wishlist_id: int):
         """Find all WishlistItems for a given wishlist ID"""
-        return cls.query.filter(cls.wishlist_id == wishlist_id).all()
+        return (
+            cls.query.filter(cls.wishlist_id == wishlist_id)
+            .order_by(cls.position.asc())
+            .all()
+        )
 
     @classmethod
     def find_by_wishlist_and_product(cls, wishlist_id: int, product_id: int):
