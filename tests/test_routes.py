@@ -33,6 +33,7 @@ from tests.factories import CUSTOMER_ID
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/wishlist_items"
 
 
 ######################################################################
@@ -76,3 +77,48 @@ class TestWishlistsService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_create_wishlist_item(self):
+        """It should Create a new Wishlist Item"""
+
+        # Todo: Delete these two lines of code after create_wishlist is implemented
+        test_wishlist = WishlistsFactory()
+        test_wishlist.create()
+
+        test_wishlist_item = WishlistItemsFactory()
+
+        # Todo: Delete this line of code after create_wishlist is implemented
+        test_wishlist_item.wishlist_id = test_wishlist.id
+
+        logging.debug("Test Wishlist Item: %s", test_wishlist_item.serialize())
+        response = self.client.post(BASE_URL, json=test_wishlist_item.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_wishlist_item = response.get_json()
+        self.assertEqual(
+            new_wishlist_item["wishlist_id"], test_wishlist_item.wishlist_id
+        )
+        self.assertEqual(new_wishlist_item["product_id"], test_wishlist_item.product_id)
+        self.assertEqual(
+            new_wishlist_item["description"], test_wishlist_item.description
+        )
+        self.assertEqual(new_wishlist_item["position"], test_wishlist_item.position)
+
+        # Todo: Uncomment this code when get_wishlist_items is implemented
+        # Check that the location header was correct
+        # response = self.client.get(location)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # new_wishlist_item = response.get_json()
+        # self.assertEqual(
+        #     new_wishlist_item["wishlist_id"], test_wishlist_item.wishlist_id
+        # )
+        # self.assertEqual(new_wishlist_item["product_id"], test_wishlist_item.product_id)
+        # self.assertEqual(
+        #     new_wishlist_item["description"], test_wishlist_item.description
+        # )
+        # self.assertEqual(new_wishlist_item["position"], test_wishlist_item.position)
