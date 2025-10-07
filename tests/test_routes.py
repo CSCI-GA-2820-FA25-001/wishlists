@@ -24,7 +24,11 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, YourResourceModel
+from service.models import db
+from service.models import Wishlists, WishlistItems
+from tests.factories import WishlistsFactory, WishlistItemsFactory
+from tests.factories import CUSTOMER_ID
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -35,7 +39,7 @@ DATABASE_URI = os.getenv(
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestWishlistsService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -56,7 +60,8 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Wishlists).delete()  # clean up the last tests
+        db.session.query(WishlistItems).delete()
         db.session.commit()
 
     def tearDown(self):
@@ -71,5 +76,3 @@ class TestYourResourceService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-    # Todo: Add your test cases here...

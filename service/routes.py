@@ -15,16 +15,22 @@
 ######################################################################
 
 """
-YourResourceModel Service
+Wishlists Service
 
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Wishlists
 """
 
+from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
-from service.common import status  # HTTP Status Codes
+from service.models import Wishlists, WishlistItems
+from service.common import status
+from service.models.persistent_base import DataValidationError  # HTTP Status Codes
+
+# It should be based on the authenticated user
+# For now, a hardcoded value is used
+STATE_CUSTOMER_ID = 1
 
 
 ######################################################################
@@ -42,5 +48,3 @@ def index():
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
-
-# Todo: Place your REST API code here ...
