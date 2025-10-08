@@ -34,6 +34,8 @@ DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
+BASE_URL = "/wishlists"
+
 
 ######################################################################
 #  T E S T   C A S E S
@@ -76,3 +78,45 @@ class TestWishlistsService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_create_wishlist(self):
+        """It should Create a new Account"""
+        wishlist = WishlistsFactory()
+        resp = self.client.post(
+            BASE_URL, json=wishlist.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_wishlist = resp.get_json()
+        self.assertEqual(new_wishlist["name"], wishlist.name, "Names do not match")
+        self.assertEqual(
+            new_wishlist["description"], wishlist.description, "Descriptions do not match"
+        )
+        self.assertEqual(
+            new_wishlist["category"], wishlist.category, "Categories do not match"
+        )
+        self.assertEqual(
+            new_wishlist["created_date"], str(wishlist.created_date), "Created date is not set"
+        )
+
+        # **TODO** Uncomment once get_wishlists is implemented
+        
+        # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_wishlist = resp.get_json()
+        # self.assertEqual(new_wishlist["name"], wishlist.name, "Names do not match")
+        # self.assertEqual(
+        #     new_wishlist["description"], wishlist.description, "Descriptions do not match"
+        # )
+        # self.assertEqual(
+        #     new_wishlist["category"], wishlist.category, "Categories do not match"
+        # )
+        # self.assertEqual(
+        #     new_wishlist["created_date"], str(wishlist.created_date), "Created date is not set"
+        # )

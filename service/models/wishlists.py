@@ -82,7 +82,7 @@ class Wishlists(db.Model, PersistentBase):
             )
             self.updated_date = (
                 date.fromisoformat(data["updated_date"])
-                if "updated_date" in data
+                if "updated_date" in data and data["updated_date"] is not None
                 else None
             )
         except AttributeError as e:
