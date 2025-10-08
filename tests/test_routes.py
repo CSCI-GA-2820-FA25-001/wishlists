@@ -120,3 +120,11 @@ class TestWishlistsService(TestCase):
         # self.assertEqual(
         #     new_wishlist["created_date"], str(wishlist.created_date), "Created date is not set"
         # )
+    
+    def test_create_wishlist_unsupported_media_type(self):
+        """It should reject non-JSON Content-Type with 415"""
+        wishlist = WishlistsFactory()
+        resp = self.client.post(
+            BASE_URL, json=wishlist.serialize(), content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
