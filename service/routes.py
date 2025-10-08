@@ -48,3 +48,36 @@ def index():
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
+
+
+######################################################################
+# CREATE A NEW WISHLIST
+######################################################################
+@app.route("/wishlists", methods=["POST"])
+def create_wishlists():
+    """
+    Creates a Wishlist
+    This endpoint will create a Wishlist based the data in the body that is posted
+    """
+    app.logger.info("Request to create a Wishlist")
+    if not request.is_json:
+        app.logger.error("Invalid Content-Type: %s", request.headers.get("Content-Type"))
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be application/json",
+        )
+
+    # Create the wishlist
+    wishlist = Wishlists()
+    wishlist.deserialize(request.get_json())
+    # TODO: Validate customer_id once authentication is implemented
+    wishlist.create()
+
+    # Create a message to return
+    message = wishlist.serialize()
+
+    # **TODO** Uncomment once get_wishlists is implemented
+    # location_url = url_for("get_wishlists", wishlist_id=wishlist.id, _external=True)
+    location_url= None
+
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
