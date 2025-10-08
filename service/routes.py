@@ -81,3 +81,35 @@ def create_wishlists():
     location_url= None
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+######################################################################
+# READ A WISHLIST ITEM
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["GET"])
+def get_wishlist_item(wishlist_id, product_id):
+    """
+    Get a Wishlist Item
+
+    This endpoint returns just a wishlist item
+    """
+    app.logger.info(
+        "Request to retrieve a Wishlist Item with id: %s from Wishlist with id: %s", product_id, wishlist_id
+    )
+
+    # First check if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' not found",
+        )
+
+    # See if the wishlist item exists and abort if it doesn't
+    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
+    if not wishlist_item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist Item with id '{product_id}' not found in Wishlist with id '{wishlist_id}'",
+        )
+
+    return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
