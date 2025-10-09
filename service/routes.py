@@ -25,6 +25,7 @@ from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
 from service.common import status
+from service.models.persistent_base import DataValidationError
 
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
