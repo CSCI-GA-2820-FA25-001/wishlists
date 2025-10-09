@@ -70,6 +70,24 @@ class TestWishlistsService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    def _create_wishlists(self, count):
+        """Factory method to create wishlists in bulk"""
+        wishlists = []
+        for _ in range(count):
+            wishlist = WishlistsFactory()
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test Wishlist",
+            )
+            new_wishlist = resp.get_json()
+            wishlist.id = new_wishlist["id"]
+            wishlists.append(wishlist)
+        return wishlists
+
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
@@ -195,3 +213,40 @@ class TestWishlistsService(TestCase):
         # Delete the same id again, still return 204
         resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    ######################################################################
+    #  I T E M S   T E S T   C A S E S
+    ######################################################################
+
+    def test_add_wishlist_item(self):
+        """It should Add a wishlist item to a wishlist"""
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            json=wishlist_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["wishlist_id"], wishlist.id)
+        self.assertEqual(data["product_id"], wishlist_item.product_id)
+        self.assertEqual(data["description"], wishlist_item.description)
+        self.assertEqual(data["position"], wishlist_item.position)
+
+        # TODO: Uncomment once GET wishlist_item endpoint is implemented
+        # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_wishlist_item = resp.get_json()
+        # self.assertEqual(
+        #     new_wishlist_item["wishlist_id"],
+        #     wishlist_item.wishlist_id,
+        #     "Wishlist ID does not match",
+        # )
