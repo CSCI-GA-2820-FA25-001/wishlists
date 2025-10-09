@@ -155,16 +155,15 @@ class TestWishlistsService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    def test_delete_wishlist(self):
-        """It should delete a wishlist"""
-        # get the id of a wishlist
-        wishlist = self._create_wishlists(1)[0]
-        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+    def test_create_wishlist_bad_request(self):
+        """It should not create a wishlist with missing data"""
+        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Delete the same id again, still return 204
-        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+    def test_create_wishlist_method_not_allowed(self):
+        """It should not allow an illegal method"""
+        resp = self.client.put(BASE_URL, json={"not": "today"})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get_wishlist(self):
         """It should Get a single Wishlist"""
@@ -186,20 +185,13 @@ class TestWishlistsService(TestCase):
         resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_bad_request(self):
-        """It should not Create when sending the wrong data"""
-        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_delete_wishlist(self):
+        """It should delete a wishlist"""
+        # get the id of a wishlist
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_unsupported_media_type(self):
-        """It should not Create when sending wrong media type"""
-        wishlist = WishlistsFactory()
-        resp = self.client.post(
-            BASE_URL, json=wishlist.serialize(), content_type="text/html"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    def test_method_not_allowed(self):
-        """It should not allow an illegal method"""
-        resp = self.client.put(BASE_URL, json={"not": "today"})
-        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # Delete the same id again, still return 204
+        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
