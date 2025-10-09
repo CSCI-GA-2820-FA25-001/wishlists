@@ -37,20 +37,10 @@ STATE_CUSTOMER_ID = 1
 @app.route("/")
 def index():
     """Root URL response"""
-    return jsonify(
-        name="Wishlists REST API Service",
-        version="1.0",
-        description="This is a RESTful API service for managing customer wishlists",
-        endpoints={
-            "list_wishlists": "/wishlists",
-            "create_wishlist": "/wishlists",
-            "get_wishlist": "/wishlists/<int:wishlist_id>",
-            "delete_wishlist": "/wishlists/<int:wishlist_id>",
-            "add_wishlist_item": "/wishlists/<int:wishlist_id>/wishlist_items",
-            "get_wishlist_item": "/wishlists/<int:wishlist_id>/items/<int:product_id>",
-            "delete_wishlist_item": "/wishlists/<int:wishlist_id>/wishlist_items/<int:product_id>",
-        }
-    ), status.HTTP_200_OK
+    return (
+        "Reminder: return some useful information in json format about the service here",
+        status.HTTP_200_OK,
+    )
 
 
 ######################################################################

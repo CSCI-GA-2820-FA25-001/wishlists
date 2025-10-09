@@ -100,13 +100,6 @@ class TestWishlistsService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertIsNotNone(data)
-        self.assertIn("name", data)
-        self.assertIn("version", data)
-        self.assertIn("description", data)
-        self.assertIn("endpoints", data)
-        self.assertEqual(data["name"], "Wishlists REST API Service")
 
     def test_create_wishlist(self):
         """It should Create a new Wishlist"""
