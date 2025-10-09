@@ -86,7 +86,7 @@ def create_wishlists():
 
 
 ######################################################################
-# DELETE AN WISHLIST
+# DELETE A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
 def delete_wishlist(wishlist_id):
@@ -105,3 +105,77 @@ def delete_wishlist(wishlist_id):
         app.logger.info("Wishlist with id: %s deleted", wishlist_id)
 
     return "", status.HTTP_204_NO_CONTENT
+
+
+# ---------------------------------------------------------------------
+#                I T E M S   M E T H O D S
+# ---------------------------------------------------------------------
+
+
+######################################################################
+# ADD AN ITEM TO A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/wishlist_items", methods=["POST"])
+def create_wishlist_items(wishlist_id):
+    """
+    Create a wishlist item on a wishlist
+
+    This endpoint will add a wishlist item to a wishlist
+    """
+    app.logger.info(
+        "Request to create a wishlist item for wishlist with id: %s", wishlist_id
+    )
+    check_content_type("application/json")
+
+    # See if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' could not be found.",
+        )
+
+    # Create an wishlist_item from the json data
+    wishlist_item = WishlistItems()
+    wishlist_item.deserialize(request.get_json())
+
+    # Append the wishlist_item to the wishlist
+    wishlist.wishlist_items.append(wishlist_item)
+    wishlist.update()
+
+    # Prepare a message to return
+    message = wishlist_item.serialize()
+
+    # Send the location to GET the new item
+    location_url = url_for(
+        # TODO delete this code and uncomment "get_wishlist_items"
+        "index",
+        # "get_wishlist_items",
+        wishlist_id=wishlist.id,
+        wishlist_item_id=wishlist_item.product_id,
+        _external=True,
+    )
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+def check_content_type(content_type):
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
+    )
