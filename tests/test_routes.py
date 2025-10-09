@@ -156,7 +156,7 @@ class TestWishlistsService(TestCase):
     ######################################################################
 
     def test_add_wishlist_item(self):
-        """It should Add a wishlist item to a  wishlist"""
+        """It should Add a wishlist item to a wishlist"""
         wishlist = self._create_wishlists(1)[0]
         wishlist_item = WishlistItemsFactory()
         resp = self.client.post(
