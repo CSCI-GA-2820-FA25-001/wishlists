@@ -89,6 +89,28 @@ class TestWishlistsService(TestCase):
         return wishlists
 
     ######################################################################
+    #  H E L P E R   M E T H O D S
+    ######################################################################
+
+    def _create_wishlists(self, count):
+        """Factory method to create wishlists in bulk"""
+        wishlists = []
+        for _ in range(count):
+            wishlist = WishlistsFactory()
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test Wishlist",
+            )
+            new_wishlist = resp.get_json()
+            wishlist.id = new_wishlist["id"]
+            wishlists.append(wishlist)
+        return wishlists
+
+    ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
 
@@ -187,3 +209,14 @@ class TestWishlistsService(TestCase):
         #     wishlist_item.wishlist_id,
         #     "Wishlist ID does not match",
         # )
+        
+    def test_delete_wishlist(self):
+        """It should delete a wishlist"""
+        # get the id of a wishlist
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Delete the same id again, still return 204
+        resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
