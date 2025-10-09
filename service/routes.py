@@ -61,10 +61,12 @@ def create_wishlists():
     """
     app.logger.info("Request to create a Wishlist")
     if not request.is_json:
-        app.logger.error("Invalid Content-Type: %s", request.headers.get("Content-Type"))
+        app.logger.error(
+            "Invalid Content-Type: %s", request.headers.get("Content-Type")
+        )
         abort(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            f"Content-Type must be application/json",
+            "Content-Type must be application/json",
         )
 
     # Create the wishlist
@@ -78,6 +80,28 @@ def create_wishlists():
 
     # **TODO** Uncomment once get_wishlists is implemented
     # location_url = url_for("get_wishlists", wishlist_id=wishlist.id, _external=True)
-    location_url= None
+    location_url = None
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# DELETE AN WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
+def delete_wishlist(wishlist_id):
+    """
+    Delete a Wishlist
+
+    This endpoint will delete a Wishlist based the id specified in the path
+    """
+    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+
+    # Retrieve the wishlist to delete and delete it if it exists
+    wishlist = Wishlists.find(wishlist_id)
+    if wishlist:
+        app.logger.info("Deleting wishlist with id: %s", wishlist_id)
+        wishlist.delete()
+        app.logger.info("Wishlist with id: %s deleted", wishlist_id)
+
+    return "", status.HTTP_204_NO_CONTENT
