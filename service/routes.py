@@ -85,6 +85,28 @@ def create_wishlists():
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
+######################################################################
+# DELETE A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
+def delete_wishlist(wishlist_id):
+    """
+    Delete a Wishlist
+
+    This endpoint will delete a Wishlist based the id specified in the path
+    """
+    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+
+    # Retrieve the wishlist to delete and delete it if it exists
+    wishlist = Wishlists.find(wishlist_id)
+    if wishlist:
+        app.logger.info("Deleting wishlist with id: %s", wishlist_id)
+        wishlist.delete()
+        app.logger.info("Wishlist with id: %s deleted", wishlist_id)
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
 # ---------------------------------------------------------------------
 #                I T E M S   M E T H O D S
 # ---------------------------------------------------------------------
@@ -135,31 +157,11 @@ def create_wishlist_items(wishlist_id):
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
-######################################################################
-# DELETE A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
-def delete_wishlist(wishlist_id):
-    """
-    Delete a Wishlist
-
-    This endpoint will delete a Wishlist based the id specified in the path
-    """
-    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
-
-    # Retrieve the wishlist to delete and delete it if it exists
-    wishlist = Wishlists.find(wishlist_id)
-    if wishlist:
-        app.logger.info("Deleting wishlist with id: %s", wishlist_id)
-        wishlist.delete()
-        app.logger.info("Wishlist with id: %s deleted", wishlist_id)
-
-    return "", status.HTTP_204_NO_CONTENT
-  
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
+
 
 def check_content_type(content_type):
     """Checks that the media type is correct"""
@@ -177,4 +179,3 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
-    

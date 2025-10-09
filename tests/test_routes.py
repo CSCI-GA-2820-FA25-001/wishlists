@@ -209,7 +209,7 @@ class TestWishlistsService(TestCase):
         #     wishlist_item.wishlist_id,
         #     "Wishlist ID does not match",
         # )
-        
+
     def test_delete_wishlist(self):
         """It should delete a wishlist"""
         # get the id of a wishlist
