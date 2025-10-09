@@ -23,7 +23,9 @@ import os
 import logging
 import random
 from unittest import TestCase
+from unittest.mock import patch
 from pytest import warns
+from service.models.persistent_base import PersistentBase
 from wsgi import app
 from service.models import DataValidationError, db
 from service.models import Wishlists, WishlistItems
@@ -70,8 +72,68 @@ class TestWishlistsModel(TestCase):
     #  T E S T   C A S E S
     ######################################################################
 
+    def test_persistent_base_init(self):
+        """PersistentBase should initialize a model with id=None"""
+        data = PersistentBase()
+        self.assertIsInstance(data, PersistentBase)
+        self.assertIsNone(data.id)
+
+    def test_persistent_base_update(self):
+        """PersistentBase should update a model in the database"""
+        wishlist = WishlistsFactory()
+        self.assertIsNotNone(wishlist)
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        old_name = wishlist.name
+        wishlist.name = "New Name"
+        wishlist.update()
+        self.assertNotEqual(old_name, wishlist.name)
+        data = Wishlists.find(wishlist.id)
+        self.assertEqual(data.name, "New Name")
+
+    def test_persistent_base_update_db_error(self):
+        """PersistentBase should raise Exception when a database error occurs during update"""
+        wishlist = WishlistsFactory()
+        self.assertIsNotNone(wishlist)
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        old_name = wishlist.name
+        wishlist.name = "New Name"
+
+        with patch.object(db.session, "commit", side_effect=Exception("DB Error")):
+            with self.assertRaises(Exception) as context:
+                wishlist.update()
+            self.assertTrue("DB Error" in str(context.exception))
+        # Verify the name was not changed in the database
+        data = Wishlists.find(wishlist.id)
+        self.assertEqual(data.name, old_name)
+
+    def test_persistent_base_update_no_id(self):
+        """PersistentBase should raise DataValidationError when updating with no id"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        wishlist.id = None
+        wishlist.name = "New Name"
+        with self.assertRaises(DataValidationError):
+            wishlist.update()
+
+    def test_persistent_base_delete_db_error(self):
+        """PersistentBase should raise Exception when a database error occurs during delete"""
+        wishlist = WishlistsFactory()
+        self.assertIsNotNone(wishlist)
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+
+        with patch.object(db.session, "commit", side_effect=Exception("DB Error")):
+            with self.assertRaises(Exception) as context:
+                wishlist.delete()
+            self.assertTrue("DB Error" in str(context.exception))
+        # Verify the wishlist was not deleted from the database
+        data = Wishlists.find(wishlist.id)
+        self.assertIsNotNone(data)
+
     def test_wishlist_repr(self):
-        """It should return a string representation of a Wishlists"""
+        """Wishlists should return a string representation of a Wishlists"""
         wishlist = WishlistsFactory()
         logging.debug(wishlist)
         self.assertIsInstance(repr(wishlist), str)
@@ -81,7 +143,7 @@ class TestWishlistsModel(TestCase):
         )
 
     def test_wishlist_items_repr(self):
-        """It should return a string representation of a WishlistItems"""
+        """WishlistItems should return a string representation of a WishlistItems"""
         wishlist = WishlistsFactory()
         item = WishlistItemsFactory(wishlist_id=wishlist.id)
         logging.debug(item)
@@ -155,6 +217,39 @@ class TestWishlistsModel(TestCase):
         with self.assertRaises(DataValidationError):
             Wishlists().deserialize({"name": "Valid Name"})  # Missing customer_id
 
+    def test_wishlist_deserialize_bad_getitem(self):
+        """It should raise DataValidationError on bad data"""
+
+        class BadData:
+            """A dict-like object that works with [] but raises AttributeError when .get() is called."""
+
+            def __getitem__(self, key):
+                # Return normal values like a dict would
+                if key == "customer_id":
+                    return 123
+                elif key == "name":
+                    return "Test Wishlist"
+                elif key == "created_date":
+                    return "2025-10-09"
+                elif key == "updated_date":
+                    return None
+                else:
+                    raise KeyError(key)
+
+            def __contains__(self, key):
+                # So `"created_date" in data` works
+                return key in {"customer_id", "name", "created_date", "updated_date"}
+
+            def get(self, key, default=None):
+                # Simulate a broken .get() method that always raises an error
+                raise AttributeError(
+                    f"Simulated broken .get() method for key: {key}, default: {default}"
+                )
+
+        bad_data = BadData()
+        with self.assertRaises(DataValidationError):
+            Wishlists().deserialize(bad_data)
+
     def test_wishlist_items_deserialize(self):
         """It should deserialize a WishlistItems"""
         data = {
@@ -184,6 +279,44 @@ class TestWishlistsModel(TestCase):
         data["product_id"] = "not-an-int"
         with self.assertRaises(DataValidationError):
             item.deserialize(data)
+
+    def test_wishlist_items_deserialize_bad_getitem(self):
+        """It should raise DataValidationError on bad data"""
+
+        class BadData:
+            """A dict-like object that works with [] but raises AttributeError when .get() is called."""
+
+            def __getitem__(self, key):
+                # Return normal values like a dict would
+                if key == "wishlist_id":
+                    return 1
+                elif key == "product_id":
+                    return 42
+                elif key == "description":
+                    return "This is a product"
+                elif key == "position":
+                    return 1000
+                else:
+                    raise KeyError(key)
+
+            def __contains__(self, key):
+                # So `"created_date" in data` works
+                return key in {
+                    "wishlist_id",
+                    "product_id",
+                    "description",
+                    "position",
+                }
+
+            def get(self, key, default=None):
+                # Simulate a broken .get() method that always raises an error
+                raise AttributeError(
+                    f"Simulated broken .get() method for key: {key}, default: {default}"
+                )
+
+        bad_data = BadData()
+        with self.assertRaises(DataValidationError):
+            WishlistItems().deserialize(bad_data)
 
     def test_wishlist_items_foreign_key_constraint(self):
         """It should enforce foreign key constraint on WishlistItems"""
@@ -347,6 +480,18 @@ class TestWishlistsModel(TestCase):
         with self.assertRaises(DataValidationError):
             Wishlists.reposition(9999)  # Non-existent wishlist_id
 
+    def test_wishlist_items_reposition_db_error(self):
+        """It should raise Exception when a database error occurs during repositioning"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        wishlist_items = WishlistItemsFactory(wishlist_id=wishlist.id)
+        wishlist_items.create()
+
+        with patch.object(db.session, "commit", side_effect=Exception("DB Error")):
+            with self.assertRaises(Exception) as context:
+                Wishlists.reposition(wishlist.id)
+            self.assertTrue("DB Error" in str(context.exception))
+
     def test_move_wishlist_item(self):
         """It should move a WishlistItem to a new position in the Wishlist"""
         wishlist = WishlistsFactory()
@@ -476,3 +621,55 @@ class TestWishlistsModel(TestCase):
         ]
         self.assertEqual(new_positions, [2, 1002])
         self.assertEqual(moved_item.position, 1002)
+
+    def test_move_wishlist_item_no_wishlist(self):
+        """It should raise DataValidationError when moving an item in a non-existent Wishlist"""
+        with self.assertRaises(DataValidationError):
+            Wishlists.move_item(9999, 1, 1000)  # Non-existent wishlist_id
+
+    def test_move_wishlist_item_no_items(self):
+        """It should raise DataValidationError when moving an item in a Wishlist with no items"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        with self.assertRaises(DataValidationError):
+            Wishlists.move_item(wishlist.id, 1, 1000)  # Wishlist has no items
+
+    def test_move_wishlist_item_one_item(self):
+        """It should return the single item when moving in a Wishlist with one item"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item.position = 1000
+        item.create()
+        moved_item = Wishlists.move_item(wishlist.id, item.product_id, 500)
+        self.assertEqual(moved_item.product_id, item.product_id)
+        self.assertEqual(moved_item.position, item.position)
+
+    def test_move_wishlist_item_not_found(self):
+        """It should raise DataValidationError when the item to move is not found in the Wishlist"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item.position = 1000
+        item.create()
+        item_2 = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item_2.position = 2000
+        item_2.create()
+        with self.assertRaises(DataValidationError):
+            Wishlists.move_item(wishlist.id, 9999, 500)  # Non-existent product_id
+
+    def test_move_wishlist_item_db_error(self):
+        """It should raise Exception when a database error occurs during move_item"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item.position = 1000
+        item.create()
+        item_2 = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item_2.position = 2000
+        item_2.create()
+
+        with patch.object(db.session, "commit", side_effect=Exception("DB Error")):
+            with self.assertRaises(Exception) as context:
+                Wishlists.move_item(wishlist.id, item_2.product_id, 500)
+            self.assertTrue("DB Error" in str(context.exception))
