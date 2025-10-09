@@ -49,7 +49,9 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-
+######################################################################
+# UPDATE WISHLISTS
+######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
 def update_wishlist(wishlist_id):
     app.logger.info("Request to update wishlist with id: %s", wishlist_id)
