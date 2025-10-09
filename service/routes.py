@@ -91,7 +91,7 @@ def create_wishlists():
 
 
 ######################################################################
-# ADD AN ADDRESS TO AN ACCOUNT
+# ADD AN ITEM TO A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>/wishlist_items", methods=["POST"])
 def create_wishlist_items(wishlist_id):
