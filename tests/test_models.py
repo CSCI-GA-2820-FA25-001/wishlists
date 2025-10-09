@@ -87,7 +87,6 @@ class TestWishlistsModel(TestCase):
         old_name = wishlist.name
         wishlist.name = "New Name"
         wishlist.update()
-        self.assertEqual(wishlist.id, wishlist.id)
         self.assertNotEqual(old_name, wishlist.name)
         data = Wishlists.find(wishlist.id)
         self.assertEqual(data.name, "New Name")
