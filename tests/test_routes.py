@@ -69,7 +69,7 @@ class TestWishlistsService(TestCase):
     def tearDown(self):
         """This runs after each test"""
         db.session.remove()
-    
+
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
@@ -79,7 +79,9 @@ class TestWishlistsService(TestCase):
         wishlists = []
         for _ in range(count):
             wishlist = WishlistsFactory()
-            resp = self.client.post(BASE_URL, json=wishlist.serialize(), content_type="application/json")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
             self.assertEqual(
                 resp.status_code,
                 status.HTTP_201_CREATED,
@@ -115,17 +117,21 @@ class TestWishlistsService(TestCase):
         new_wishlist = resp.get_json()
         self.assertEqual(new_wishlist["name"], wishlist.name, "Names do not match")
         self.assertEqual(
-            new_wishlist["description"], wishlist.description, "Descriptions do not match"
+            new_wishlist["description"],
+            wishlist.description,
+            "Descriptions do not match",
         )
         self.assertEqual(
             new_wishlist["category"], wishlist.category, "Categories do not match"
         )
         self.assertEqual(
-            new_wishlist["created_date"], str(wishlist.created_date), "Created date is not set"
+            new_wishlist["created_date"],
+            str(wishlist.created_date),
+            "Created date is not set",
         )
 
         # **TODO** Uncomment once get_wishlists is implemented
-        
+
         # Check that the location header was correct by getting it
         # resp = self.client.get(location, content_type="application/json")
         # self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -140,7 +146,7 @@ class TestWishlistsService(TestCase):
         # self.assertEqual(
         #     new_wishlist["created_date"], str(wishlist.created_date), "Created date is not set"
         # )
-    
+
     def test_create_wishlist_unsupported_media_type(self):
         """It should reject non-JSON Content-Type with 415"""
         wishlist = WishlistsFactory()
@@ -148,7 +154,7 @@ class TestWishlistsService(TestCase):
             BASE_URL, json=wishlist.serialize(), content_type="text/plain"
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-    
+
     def test_get_wishlist_item(self):
         """It should Read a Wishlist Item"""
         # Create a wishlist first
@@ -179,7 +185,7 @@ class TestWishlistsService(TestCase):
         self.assertEqual(data["description"], wishlist_item.description)
         self.assertEqual(data["position"], wishlist_item.position)
         self.assertEqual(data["product_id"], wishlist_item.product_id)
-    
+
     def test_get_wishlist_item_not_found(self):
         """It should return 404 for a non-existent Wishlist Item"""
         wishlist = self._create_wishlists(1)[0]
@@ -188,7 +194,7 @@ class TestWishlistsService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_get_wishlist_item_wishlist_not_found(self):
         """It should return 404 for a non-existent Wishlist"""
         resp = self.client.get(

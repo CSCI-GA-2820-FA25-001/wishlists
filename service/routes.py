@@ -61,10 +61,12 @@ def create_wishlists():
     """
     app.logger.info("Request to create a Wishlist")
     if not request.is_json:
-        app.logger.error("Invalid Content-Type: %s", request.headers.get("Content-Type"))
+        app.logger.error(
+            "Invalid Content-Type: %s", request.headers.get("Content-Type")
+        )
         abort(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            f"Content-Type must be application/json",
+            "Content-Type must be application/json",
         )
 
     # Create the wishlist
@@ -78,9 +80,10 @@ def create_wishlists():
 
     # **TODO** Uncomment once get_wishlists is implemented
     # location_url = url_for("get_wishlists", wishlist_id=wishlist.id, _external=True)
-    location_url= None
+    location_url = None
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
 
 ######################################################################
 # READ A WISHLIST ITEM
@@ -93,12 +96,15 @@ def get_wishlist_item(wishlist_id, product_id):
     This endpoint returns just a wishlist item
     """
     app.logger.info(
-        "Request to retrieve a Wishlist Item with id: %s from Wishlist with id: %s", product_id, wishlist_id
+        "Request to retrieve a Wishlist Item with id: %s from Wishlist with id: %s",
+        product_id,
+        wishlist_id,
     )
 
     # First check if the wishlist exists and abort if it doesn't
     wishlist = Wishlists.find(wishlist_id)
     if not wishlist:
+        app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
         abort(
             status.HTTP_404_NOT_FOUND,
             f"Wishlist with id '{wishlist_id}' not found",
@@ -107,9 +113,13 @@ def get_wishlist_item(wishlist_id, product_id):
     # See if the wishlist item exists and abort if it doesn't
     wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
     if not wishlist_item:
+        app.logger.warning(
+            "Wishlist Item with id [%s] was not found in Wishlist with id [%s]",
+            product_id,
+            wishlist_id,
+        )
         abort(
             status.HTTP_404_NOT_FOUND,
             f"Wishlist Item with id '{product_id}' not found in Wishlist with id '{wishlist_id}'",
         )
-
     return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
