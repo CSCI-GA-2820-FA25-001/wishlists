@@ -218,6 +218,54 @@ class TestWishlistsService(TestCase):
     #  I T E M S   T E S T   C A S E S
     ######################################################################
 
+    def test_get_wishlist_item(self):
+        """It should Read a Wishlist Item"""
+        # Create a wishlist first
+        wishlist = self._create_wishlists(1)[0]
+
+        # Create a wishlist item
+        # TODO: Wait until create_wishlist_items is implemented
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            json=wishlist_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        data = resp.get_json()
+        wishlist_item.product_id = data["product_id"]
+
+        # retrieve it back
+        resp = self.client.get(
+            f"{BASE_URL}/{wishlist.id}/items/{wishlist_item.product_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(data["wishlist_id"], wishlist.id)
+        self.assertEqual(data["description"], wishlist_item.description)
+        self.assertEqual(data["position"], wishlist_item.position)
+        self.assertEqual(data["product_id"], wishlist_item.product_id)
+
+    def test_get_wishlist_item_not_found(self):
+        """It should return 404 for a non-existent Wishlist Item"""
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{wishlist.id}/items/9999",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wishlist_item_wishlist_not_found(self):
+        """It should return 404 for a non-existent Wishlist"""
+        resp = self.client.get(
+            f"{BASE_URL}/9999/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_add_wishlist_item(self):
         """It should Add a wishlist item to a wishlist"""
         wishlist = self._create_wishlists(1)[0]
