@@ -21,12 +21,10 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Wishlists
 """
 
-from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
 from service.common import status
-from service.models.persistent_base import DataValidationError  # HTTP Status Codes
 
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
@@ -39,15 +37,54 @@ STATE_CUSTOMER_ID = 1
 @app.route("/")
 def index():
     """Root URL response"""
-    return (
-        "Reminder: return some useful information in json format about the service here",
-        status.HTTP_200_OK,
-    )
+    return jsonify(
+        name="Wishlists REST API Service",
+        version="1.0",
+        description="This is a RESTful API service for managing customer wishlists",
+        endpoints={
+            "list_wishlists": "/wishlists",
+            "create_wishlist": "/wishlists",
+            "get_wishlist": "/wishlists/<int:wishlist_id>",
+            "delete_wishlist": "/wishlists/<int:wishlist_id>",
+            "add_wishlist_item": "/wishlists/<int:wishlist_id>/wishlist_items",
+            "get_wishlist_item": "/wishlists/<int:wishlist_id>/items/<int:product_id>",
+            "delete_wishlist_item": "/wishlists/<int:wishlist_id>/wishlist_items/<int:product_id>",
+        }
+    ), status.HTTP_200_OK
 
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
+
+
+######################################################################
+# LIST ALL WISHLISTS
+######################################################################
+@app.route("/wishlists", methods=["GET"])
+def list_wishlists():
+    """
+    List all Wishlists
+    This endpoint will return all Wishlists
+    """
+    app.logger.info("Request to list all Wishlists")
+
+    wishlists = []
+
+    # Check for query parameter to filter by customer_id
+    customer_id = request.args.get("customer_id")
+
+    if customer_id:
+        app.logger.info("Filtering by customer_id: %s", customer_id)
+        wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
+    else:
+        app.logger.info("Returning all Wishlists")
+        wishlists = Wishlists.all()
+
+    results = [wishlist.serialize() for wishlist in wishlists]
+    app.logger.info("Returning %d wishlists", len(results))
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################

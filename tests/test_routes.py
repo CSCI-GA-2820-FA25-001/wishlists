@@ -70,24 +70,6 @@ class TestWishlistsService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
-    def _create_wishlists(self, count):
-        """Factory method to create wishlists in bulk"""
-        wishlists = []
-        for _ in range(count):
-            wishlist = WishlistsFactory()
-            resp = self.client.post(
-                BASE_URL, json=wishlist.serialize(), content_type="application/json"
-            )
-            self.assertEqual(
-                resp.status_code,
-                status.HTTP_201_CREATED,
-                "Could not create test Wishlist",
-            )
-            new_wishlist = resp.get_json()
-            wishlist.id = new_wishlist["id"]
-            wishlists.append(wishlist)
-        return wishlists
-
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
@@ -118,6 +100,13 @@ class TestWishlistsService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("name", data)
+        self.assertIn("version", data)
+        self.assertIn("description", data)
+        self.assertIn("endpoints", data)
+        self.assertEqual(data["name"], "Wishlists REST API Service")
 
     def test_create_wishlist(self):
         """It should Create a new Wishlist"""
@@ -213,6 +202,36 @@ class TestWishlistsService(TestCase):
         # Delete the same id again, still return 204
         resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_list_wishlists(self):
+        """It should Get a list of Wishlists"""
+        self._create_wishlists(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_list_wishlists_empty(self):
+        """It should return an empty list when no wishlists exist"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+        self.assertEqual(data, [])
+
+    def test_list_wishlists_by_customer_id(self):
+        """It should Get a list of Wishlists filtered by customer_id"""
+        # Create wishlists with the default customer_id
+        self._create_wishlists(3)
+
+        # Query for wishlists by customer_id
+        resp = self.client.get(BASE_URL, query_string={"customer_id": CUSTOMER_ID})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+        # Verify all wishlists have the correct customer_id
+        for wishlist in data:
+            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
 
     ######################################################################
     #  I T E M S   T E S T   C A S E S
