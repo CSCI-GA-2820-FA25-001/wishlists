@@ -250,3 +250,24 @@ class TestWishlistsService(TestCase):
         #     wishlist_item.wishlist_id,
         #     "Wishlist ID does not match",
         # )
+
+    def test_delete_wishlist_item(self):
+        """It should Delete a wishlist item"""
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            json=wishlist_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        logging.debug(data)
+        wishlist_item_id = data["product_id"]
+
+        # send delete request
+        resp = self.client.delete(
+            f"{BASE_URL}/{wishlist.id}/wishlist_items/{wishlist_item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
