@@ -50,58 +50,23 @@ def index():
 ######################################################################
 
 
-######################################################################
-# CREATE A NEW WISHLIST
-######################################################################
-@app.route("/wishlists", methods=["POST"])
-def create_wishlists():
-    """
-    Creates a Wishlist
-    This endpoint will create a Wishlist based the data in the body that is posted
-    """
-    app.logger.info("Request to create a Wishlist")
-    if not request.is_json:
-        app.logger.error(
-            "Invalid Content-Type: %s", request.headers.get("Content-Type")
-        )
-        abort(
-            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            "Content-Type must be application/json",
-        )
+@app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
+def update_wishlist(wishlist_id):
+    app.logger.info("Request to update wishlist with id: %s", wishlist_id)
+    
+    wishlist = Wishlists.find_by_id(wishlist_id)
+    if not wishlist:
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id '{wishlist_id}' was not found.")
+    
+    if wishlist.customer_id != STATE_CUSTOMER_ID:
+        abort(status.HTTP_403_FORBIDDEN, f"You do not have permission to update this wishlist.")
+    
+    data = request.get_json()
+    try:
+        wishlist.deserialize(data)
+        wishlist.update()
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+    
+    return jsonify(wishlist.serialize()), status.HTTP_200_OK
 
-    # Create the wishlist
-    wishlist = Wishlists()
-    wishlist.deserialize(request.get_json())
-    # TODO: Validate customer_id once authentication is implemented
-    wishlist.create()
-
-    # Create a message to return
-    message = wishlist.serialize()
-
-    # **TODO** Uncomment once get_wishlists is implemented
-    # location_url = url_for("get_wishlists", wishlist_id=wishlist.id, _external=True)
-    location_url = None
-
-    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-
-
-######################################################################
-# DELETE AN WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
-def delete_wishlist(wishlist_id):
-    """
-    Delete a Wishlist
-
-    This endpoint will delete a Wishlist based the id specified in the path
-    """
-    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
-
-    # Retrieve the wishlist to delete and delete it if it exists
-    wishlist = Wishlists.find(wishlist_id)
-    if wishlist:
-        app.logger.info("Deleting wishlist with id: %s", wishlist_id)
-        wishlist.delete()
-        app.logger.info("Wishlist with id: %s deleted", wishlist_id)
-
-    return "", status.HTTP_204_NO_CONTENT
