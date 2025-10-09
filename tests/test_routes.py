@@ -102,7 +102,7 @@ class TestWishlistsService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_create_wishlist(self):
-        """It should Create a new Account"""
+        """It should Create a new Wishlist"""
         wishlist = WishlistsFactory()
         resp = self.client.post(
             BASE_URL, json=wishlist.serialize(), content_type="application/json"
@@ -165,3 +165,41 @@ class TestWishlistsService(TestCase):
         # Delete the same id again, still return 204
         resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_get_wishlist(self):
+        """It should Get a single Wishlist"""
+        # get the id of a wishlist
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{wishlist.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["id"], wishlist.id)
+        self.assertEqual(data["name"], wishlist.name)
+        self.assertEqual(data["description"], wishlist.description)
+        self.assertEqual(data["category"], wishlist.category)
+        self.assertEqual(data["created_date"], wishlist.created_date.isoformat())
+
+    def test_get_wishlist_not_found(self):
+        """It should not Get a Wishlist that is not found"""
+        resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_bad_request(self):
+        """It should not Create when sending the wrong data"""
+        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unsupported_media_type(self):
+        """It should not Create when sending wrong media type"""
+        wishlist = WishlistsFactory()
+        resp = self.client.post(
+            BASE_URL, json=wishlist.serialize(), content_type="text/html"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method"""
+        resp = self.client.put(BASE_URL, json={"not": "today"})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
