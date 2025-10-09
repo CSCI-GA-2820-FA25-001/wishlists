@@ -182,6 +182,36 @@ class TestWishlistsService(TestCase):
         resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_list_wishlists(self):
+        """It should Get a list of Wishlists"""
+        self._create_wishlists(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_list_wishlists_empty(self):
+        """It should return an empty list when no wishlists exist"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+        self.assertEqual(data, [])
+
+    def test_list_wishlists_by_customer_id(self):
+        """It should Get a list of Wishlists filtered by customer_id"""
+        # Create wishlists with the default customer_id
+        self._create_wishlists(3)
+
+        # Query for wishlists by customer_id
+        resp = self.client.get(BASE_URL, query_string={"customer_id": CUSTOMER_ID})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+        # Verify all wishlists have the correct customer_id
+        for wishlist in data:
+            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+
     ######################################################################
     #  I T E M S   T E S T S
     ######################################################################

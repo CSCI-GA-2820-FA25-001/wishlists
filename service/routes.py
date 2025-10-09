@@ -21,12 +21,11 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Wishlists
 """
 
-from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
 from service.common import status
-from service.models.persistent_base import DataValidationError  # HTTP Status Codes
+from service.models.persistent_base import DataValidationError
 
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
@@ -48,6 +47,35 @@ def index():
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
+
+
+######################################################################
+# LIST ALL WISHLISTS
+######################################################################
+@app.route("/wishlists", methods=["GET"])
+def list_wishlists():
+    """
+    List all Wishlists
+    This endpoint will return all Wishlists
+    """
+    app.logger.info("Request to list all Wishlists")
+
+    wishlists = []
+
+    # Check for query parameter to filter by customer_id
+    customer_id = request.args.get("customer_id")
+
+    if customer_id:
+        app.logger.info("Filtering by customer_id: %s", customer_id)
+        wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
+    else:
+        app.logger.info("Returning all Wishlists")
+        wishlists = Wishlists.all()
+
+    results = [wishlist.serialize() for wishlist in wishlists]
+    app.logger.info("Returning %d wishlists", len(results))
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
