@@ -50,6 +50,28 @@ def index():
 ######################################################################
 
 
+
+@app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
+def update_wishlist(wishlist_id):
+    app.logger.info("Request to update wishlist with id: %s", wishlist_id)
+    
+    wishlist = Wishlists.find_by_id(wishlist_id)
+    if not wishlist:
+        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id '{wishlist_id}' was not found.")
+    
+    if wishlist.customer_id != STATE_CUSTOMER_ID:
+        abort(status.HTTP_403_FORBIDDEN, f"You do not have permission to update this wishlist.")
+    
+    data = request.get_json()
+    try:
+        wishlist.deserialize(data)
+        wishlist.update()
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+    
+    return jsonify(wishlist.serialize()), status.HTTP_200_OK
+
+=======
 ######################################################################
 # CREATE A NEW WISHLIST
 ######################################################################
