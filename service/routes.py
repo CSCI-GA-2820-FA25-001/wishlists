@@ -84,27 +84,34 @@ def create_wishlists():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+
 ######################################################################
 # UPDATE WISHLISTS
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
 def update_wishlist(wishlist_id):
     app.logger.info("Request to update wishlist with id: %s", wishlist_id)
-    
+
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id '{wishlist_id}' was not found.")
-    
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' was not found.",
+        )
+
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN, f"You do not have permission to update this wishlist.")
-    
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            f"You do not have permission to update this wishlist.",
+        )
+
     data = request.get_json()
     try:
         wishlist.deserialize(data)
         wishlist.update()
     except DataValidationError as error:
         abort(status.HTTP_400_BAD_REQUEST, str(error))
-    
+
     return jsonify(wishlist.serialize()), status.HTTP_200_OK
 
 
@@ -234,11 +241,9 @@ def create_wishlist_items(wishlist_id):
 
     # Send the location to GET the new item
     location_url = url_for(
-        # TODO delete this code and uncomment "get_wishlist_items"
-        "index",
-        # "get_wishlist_items",
+        "get_wishlist_item",
         wishlist_id=wishlist.id,
-        wishlist_item_id=wishlist_item.product_id,
+        product_id=wishlist_item.product_id,
         _external=True,
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
@@ -269,6 +274,51 @@ def delete_wishlist_items(wishlist_id, product_id):
         wishlist_item.delete()
 
     return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# UPDATE A WISHLIST ITEM
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["PUT"])
+def update_wishlist_items(wishlist_id, product_id):
+    """
+    Update a wishlist item
+
+    This endpoint will update a wishlist item based the body that is posted
+    """
+    app.logger.info(
+        "Request to update wishlist item %s for wishlist id: %s",
+        (product_id, wishlist_id),
+    )
+    check_content_type("application/json")
+
+    # See if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' was not found.",
+        )
+
+    # See if the wishlist_item exists and abort if it doesn't
+    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
+    if not wishlist_item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist item with id '{product_id}' could not be found.",
+        )
+
+    # Update from the json in the body of the request
+    try:
+        wishlist_item.deserialize(request.get_json())
+        wishlist_item.wishlist_id = wishlist_id
+        wishlist_item.product_id = product_id
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    wishlist.update()
+
+    return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
