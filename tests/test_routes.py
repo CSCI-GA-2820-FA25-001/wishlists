@@ -227,7 +227,7 @@ class TestWishlistsService(TestCase):
         # TODO: Wait until create_wishlist_items is implemented
         wishlist_item = WishlistItemsFactory()
         resp = self.client.post(
-            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            f"{BASE_URL}/{wishlist.id}/items",
             json=wishlist_item.serialize(),
             content_type="application/json",
         )
@@ -271,7 +271,7 @@ class TestWishlistsService(TestCase):
         wishlist = self._create_wishlists(1)[0]
         wishlist_item = WishlistItemsFactory()
         resp = self.client.post(
-            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            f"{BASE_URL}/{wishlist.id}/items",
             json=wishlist_item.serialize(),
             content_type="application/json",
         )
@@ -304,7 +304,7 @@ class TestWishlistsService(TestCase):
         wishlist = self._create_wishlists(1)[0]
         wishlist_item = WishlistItemsFactory()
         resp = self.client.post(
-            f"{BASE_URL}/{wishlist.id}/wishlist_items",
+            f"{BASE_URL}/{wishlist.id}/items",
             json=wishlist_item.serialize(),
             content_type="application/json",
         )
@@ -315,7 +315,7 @@ class TestWishlistsService(TestCase):
 
         # send delete request
         resp = self.client.delete(
-            f"{BASE_URL}/{wishlist.id}/wishlist_items/{wishlist_item_id}",
+            f"{BASE_URL}/{wishlist.id}/items/{wishlist_item_id}",
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
