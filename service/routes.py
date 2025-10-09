@@ -72,7 +72,7 @@ def update_wishlist(wishlist_id):
         abort(status.HTTP_400_BAD_REQUEST, str(error))
     
     return jsonify(wishlist.serialize()), status.HTTP_200_OK
-=======
+
 
 ######################################################################
 # CREATE A NEW WISHLIST
