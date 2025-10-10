@@ -102,6 +102,32 @@ class TestWishlistsService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+        # Verify that response is JSON
+        self.assertEqual(resp.content_type, "application/json")
+
+        # Get the JSON data
+        data = resp.get_json()
+
+        # Verify all required fields are present
+        self.assertIn("name", data)
+        self.assertIn("version", data)
+        self.assertIn("endpoints", data)
+        self.assertIn("docs", data)
+
+        # Verify the values are correct
+        self.assertEqual(data["name"], "wishlists-service")
+        self.assertEqual(data["version"], "0.1.0")
+        self.assertEqual(
+            data["endpoints"],
+            [
+                "/wishlists",
+                "/wishlists/{id}",
+                "/wishlists/{id}/items",
+                "/wishlists/{id}/items/{item_id}",
+            ],
+        )
+        self.assertEqual(data["docs"], "See README for examples")
+
     def test_create_wishlist(self):
         """It should Create a new Wishlist"""
         wishlist = WishlistsFactory()
