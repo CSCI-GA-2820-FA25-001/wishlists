@@ -397,50 +397,69 @@ class TestWishlistsService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         
 
-    def test_put_rejects_mismatched_body_id(client, test_wishlist):
-        wl: Wishlists = test_wishlist
+    def test_update_wishlist_rejects_mismatched_body_id(self):
+        """It should reject PUT when body.id mismatches path id"""
+        wl = self._create_wishlists(1)[0]
         body = {"id": wl.id + 1, "name": "x"}
-        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_put_rejects_non_integer_id(client, test_wishlist):
-        wl: Wishlists = test_wishlist
+    def test_update_wishlist_rejects_non_integer_id(self):
+        """It should reject PUT when body.id is not an integer"""
+        wl = self._create_wishlists(1)[0]
         body = {"id": "abc", "name": "x"}
-        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_put_ignores_customer_id_change(client, test_wishlist):
-        wl: Wishlists = test_wishlist
+    def test_update_wishlist_ignores_customer_id_change(self):
+        """It should ignore changing customer_id on PUT"""
+        wl = self._create_wishlists(1)[0]
         original_owner = wl.customer_id
         body = {"name": "updated", "customer_id": original_owner + 999}
-        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_200_OK
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        assert data["customer_id"] == original_owner
-        assert data["name"] == "updated"
+        self.assertEqual(data["customer_id"], original_owner)
+        self.assertEqual(data["name"], "updated")
 
-    def test_put_accepts_matching_id(client, test_wishlist):
-        wl: Wishlists = test_wishlist
+    def test_update_wishlist_accepts_matching_id(self):
+        """It should accept PUT when body.id matches path id"""
+        wl = self._create_wishlists(1)[0]
         body = {"id": wl.id, "name": "match"}
-        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.get_json()["name"] == "match"
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json()["name"], "match")
 
-    def test_put_accepts_no_id(client, test_wishlist):
-        wl: Wishlists = test_wishlist
+    def test_update_wishlist_accepts_no_id_in_body(self):
+        """It should accept PUT with no id in body"""
+        wl = self._create_wishlists(1)[0]
         body = {"name": "no-id"}
-        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.get_json()["name"] == "no-id"
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json()["name"], "no-id")
 
-    def test_put_invalid_or_missing_json(client, test_wishlist):
-        wl: Wishlists = test_wishlist
-        resp = client.put(f"/wishlists/{wl.id}", data="not-json", content_type="application/json")
-        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    def test_update_wishlist_invalid_or_missing_json(self):
+        """It should reject PUT with invalid JSON"""
+        wl = self._create_wishlists(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", data="not-json", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_put_404_when_not_found(client):
+    def test_update_wishlist_not_found(self):
+        """It should return 404 when updating a non-existent Wishlist"""
         body = {"name": "x"}
-        resp = client.put("/wishlists/999999", data=json.dumps(body), content_type="application/json")
-        assert resp.status_code == status.HTTP_404_NOT_FOUND
-
-    
+        resp = self.client.put(
+            f"{BASE_URL}/999999", json=body, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
