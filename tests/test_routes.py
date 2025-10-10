@@ -395,3 +395,52 @@ class TestWishlistsService(TestCase):
         )
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        
+
+    def test_put_rejects_mismatched_body_id(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        body = {"id": wl.id + 1, "name": "x"}
+        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_put_rejects_non_integer_id(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        body = {"id": "abc", "name": "x"}
+        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_put_ignores_customer_id_change(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        original_owner = wl.customer_id
+        body = {"name": "updated", "customer_id": original_owner + 999}
+        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.get_json()
+        assert data["customer_id"] == original_owner
+        assert data["name"] == "updated"
+
+    def test_put_accepts_matching_id(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        body = {"id": wl.id, "name": "match"}
+        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.get_json()["name"] == "match"
+
+    def test_put_accepts_no_id(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        body = {"name": "no-id"}
+        resp = client.put(f"/wishlists/{wl.id}", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.get_json()["name"] == "no-id"
+
+    def test_put_invalid_or_missing_json(client, test_wishlist):
+        wl: Wishlists = test_wishlist
+        resp = client.put(f"/wishlists/{wl.id}", data="not-json", content_type="application/json")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_put_404_when_not_found(client):
+        body = {"name": "x"}
+        resp = client.put("/wishlists/999999", data=json.dumps(body), content_type="application/json")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    
