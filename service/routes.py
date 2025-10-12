@@ -82,7 +82,7 @@ def list_wishlists():
 # CREATE A NEW WISHLIST
 ######################################################################
 @app.route("/wishlists", methods=["POST"])
-def create_wishlists():
+def create_wishlist():
     """
     Creates a Wishlist
     This endpoint will create a Wishlist based the data in the body that is posted
@@ -100,15 +100,13 @@ def create_wishlists():
     # Create the wishlist
     wishlist = Wishlists()
     wishlist.deserialize(request.get_json())
-    # TODO: Validate customer_id once authentication is implemented
+    # NOTE: Validate customer_id once authentication is implemented
     wishlist.create()
 
     # Create a message to return
     message = wishlist.serialize()
 
-    # **TODO** Uncomment once get_wishlists is implemented
-    # location_url = url_for("get_wishlists", wishlist_id=wishlist.id, _external=True)
-    location_url = None
+    location_url = url_for("get_wishlist", wishlist_id=wishlist.id, _external=True)
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
@@ -118,6 +116,10 @@ def create_wishlists():
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
 def update_wishlist(wishlist_id):
+    """
+    Updates a Wishlist
+    This endpoint will update a Wishlist based the data in the body that is posted
+    """
     app.logger.info("Request to update wishlist with id: %s", wishlist_id)
 
     wishlist = Wishlists.find_by_id(wishlist_id)
@@ -130,10 +132,25 @@ def update_wishlist(wishlist_id):
     if wishlist.customer_id != STATE_CUSTOMER_ID:
         abort(
             status.HTTP_403_FORBIDDEN,
-            f"You do not have permission to update this wishlist.",
+            description="You do not have permission to update this wishlist.",
         )
 
     data = request.get_json()
+    if data is None:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description="Invalid or missing JSON body. Set Content-Type: application/json.",
+        )
+
+    # Ensure the id and customer_id are correct
+    if "id" in data and data["id"] != wishlist_id:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description="ID in the body must match the ID in the path.",
+        )
+
+    data["customer_id"] = wishlist.customer_id
+
     try:
         wishlist.deserialize(data)
         wishlist.update()
@@ -237,7 +254,7 @@ def get_wishlist_item(wishlist_id, product_id):
 # ADD AN ITEM TO A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>/items", methods=["POST"])
-def create_wishlist_items(wishlist_id):
+def create_wishlist_item(wishlist_id):
     """
     Create a wishlist item on a wishlist
 
@@ -269,11 +286,9 @@ def create_wishlist_items(wishlist_id):
 
     # Send the location to GET the new item
     location_url = url_for(
-        # TODO delete this code and uncomment "get_wishlist_items"
-        "index",
-        # "get_wishlist_items",
+        "get_wishlist_item",
         wishlist_id=wishlist.id,
-        wishlist_item_id=wishlist_item.product_id,
+        product_id=wishlist_item.product_id,
         _external=True,
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
@@ -286,7 +301,7 @@ def create_wishlist_items(wishlist_id):
     "/wishlists/<int:wishlist_id>/items/<int:product_id>",
     methods=["DELETE"],
 )
-def delete_wishlist_items(wishlist_id, product_id):
+def delete_wishlist_item(wishlist_id, product_id):
     """
     Delete a wishlist item
 
@@ -307,7 +322,7 @@ def delete_wishlist_items(wishlist_id, product_id):
 
 
 ######################################################################
-# DELETE ALL ITEMS IN A WISHLIST
+# LIST ALL ITEMS IN A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>/items", methods=["GET"])
 def list_wishlist_items(wishlist_id):

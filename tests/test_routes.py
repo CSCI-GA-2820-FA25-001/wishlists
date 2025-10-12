@@ -21,7 +21,6 @@ TestYourResourceModel API Service Test Suite
 # pylint: disable=duplicate-code
 import os
 import logging
-from datetime import date
 from unittest import TestCase
 from wsgi import app
 from service.common import status
@@ -131,9 +130,8 @@ class TestWishlistsService(TestCase):
             "Created date is not set",
         )
 
-        # **TODO** Uncomment once get_wishlists is implemented
-        # resp = self.client.get(location, content_type="application/json")
-        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_create_wishlist_unsupported_media_type(self):
         """It should reject non-JSON Content-Type with 415"""
@@ -281,6 +279,37 @@ class TestWishlistsService(TestCase):
         self.assertEqual(data["description"], wishlist_item.description)
         self.assertEqual(data["position"], wishlist_item.position)
 
+    def test_add_wishlist_item_wishlist_not_found(self):
+        """It should return 404 when adding an item to a non-existent wishlist"""
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/9999/items",
+            json=wishlist_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_wishlist_item_no_content_type(self):
+        """It should return 415 when Content-Type header is missing"""
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            data=str(wishlist_item.serialize()),
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_add_wishlist_item_wrong_content_type(self):
+        """It should return 415 when Content-Type is not application/json"""
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            json=wishlist_item.serialize(),
+            content_type="text/html",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
     def test_delete_wishlist_item(self):
         """It should Delete a wishlist item"""
         wishlist = self._create_wishlists(1)[0]
@@ -384,20 +413,6 @@ class TestWishlistsService(TestCase):
             payload["customer_id"],
             "Customer IDs do not match",
         )
-
-    def test_update_wishlist_not_found(self):
-        """It should not Update a Wishlist that is not found"""
-        payload = {
-            "customer_id": CUSTOMER_ID,
-            "name": "Updated Name",
-            "created_date": date.today().isoformat(),
-        }
-
-        resp = self.client.put(
-            f"{BASE_URL}/9999", json=payload, content_type="application/json"
-        )
-
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_wishlist_forbidden(self):
         """It should return 403 when updating a Wishlist that belongs to another customer"""
@@ -504,3 +519,14 @@ class TestWishlistsService(TestCase):
             f"{BASE_URL}/999999", json=body, content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_wishlist_validates_field_types(self):
+        """It should reject PUT when field types are invalid (tests deserialize validation)"""
+        wl = self._create_wishlists(1)[0]
+        body = {"name": 123}
+        resp = self.client.put(
+            f"{BASE_URL}/{wl.id}", json=body, content_type="application/json"
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("type", resp.get_json()["message"].lower())
