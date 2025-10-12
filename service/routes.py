@@ -130,25 +130,10 @@ def update_wishlist(wishlist_id):
     if wishlist.customer_id != STATE_CUSTOMER_ID:
         abort(
             status.HTTP_403_FORBIDDEN,
-            description="You do not have permission to update this wishlist.",
+            f"You do not have permission to update this wishlist.",
         )
 
-    data = request.get_json(silent=True)
-    if data is None:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            description="Invalid or missing JSON body. Set Content-Type: application/json.",
-        )
-
-    # Ensure the id and customer_id are correct
-    if "id" in data and data["id"] != wishlist_id:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            description="ID in the body must match the ID in the path.",
-        )
-
-    data["customer_id"] = wishlist.customer_id
-
+    data = request.get_json()
     try:
         wishlist.deserialize(data)
         wishlist.update()
@@ -319,6 +304,33 @@ def delete_wishlist_items(wishlist_id, product_id):
         wishlist_item.delete()
 
     return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# DELETE ALL ITEMS IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["GET"])
+def list_wishlist_items(wishlist_id):
+    """
+    List all Wishlist Items for a Wishlist
+    This endpoint will return all Wishlist Items for a Wishlist
+    """
+    app.logger.info("Request to list all Wishlist Items for Wishlist %s", wishlist_id)
+
+    # See if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' could not be found.",
+        )
+
+    # Get all items from the wishlist
+    results = [item.serialize() for item in wishlist.wishlist_items]
+    app.logger.info("Returning %d items", len(results))
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
