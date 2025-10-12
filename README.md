@@ -3,31 +3,98 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+A RESTful microservice for managing Wishlists and Wishlist Items, developed by the Wishlists Squad for NYU CSCI-GA-2820-FA25-001 DevOps and Agile Methodologies. 
 
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+The Wishlist Service implements a REST API that allows clients to: 
+- Create, Read, Update, Delete, and List wishlists
+- Add and remove items from a wishlist
+- Retrieve a specific wishlist item
 
-## Automatic Setup
+The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately.
 
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+This project follows Test-Driven Development(TDD) pratices and includes complete model and route tets with at lease 95% code coverage.
 
-## Manual Setup
+### JSON-only Responses
+All API endpoints in this service return **JSON-formatted responses**, including error messages (e.g., 400, 404, 415, 500).  
+This behavior is implemented through custom error handlers in `service/common/error_handlers.py`.
 
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
 
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
+## Setup
 
-These should be copied using a bash shell as follows:
+### Prerequisites
+- Python 3.10+
+- Docker & Docker Compose
+- VSCode Dev Containers (recommended)
 
+### Installation
+
+Clone the reposity and open it in VSCode: 
 ```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
+    git clone <your_repo_url>
+    cd <your_repo_name>
 ```
+### Note
+If you are using VSCode Remote Containers, open the folder and click "Reopen in Container". 
+
+### Run the Service
+```bash
+    honcho start
+```
+Once running, open your browser and visit:
+http://localhost:8080/
+
+## Testing Instructions
+
+### Run all tests:
+```bash
+    make test
+```
+
+### Run linter for PEP8 style
+```bash
+    make lint
+```
+
+All tests are located in the /tests folder:
+- test_models.py - tests the data model
+- test_routes.py - tests the REST API routes
+- factories.py - creates fake data for testing
+
+## REST API Endpoints
+
+### Wishlists
+| **Method** | **Endpoint** | **Description** | **Response** |
+|---------------------|----------------------|-----------------------------|----------------------|
+| `GET` | `/wishlists` | List all wishlists | `200 OK` |
+| `POST` | `/wishlists` | Create a new wishlist | `201 Created`|
+| `GET` | `/wishlists/<id>` | Retrieve a specific wishlist| `200 OK`|
+| `PUT` | `/wishlists/<id>` | Update an existing wishlist | `200 OK` |
+| `DELETE` | `/wishlists/<id>` | Delete a wishlist | `204 No Content`|
+
+### Wishlist Items
+| **Method** | **Endpoint** | **Description** | **Response** |
+|---------------------|----------------------|---------------------------|----------------------|
+| `GET` | `/wishlists/<id>/items/<product_id>` | Retrieve a wishlist item | `200 OK`|
+| `POST` | `/wishlists/<id>/items` | Add a new item to a wishlist | `201 Created`|
+| `DELETE` | `/wishlists/<id>/items/<product_id>` | Delete an item | `204 No Content`|
+
+## HTTP Status Codes
+
+| **Code** | **Meaning** | **When It’s Used** |
+|-----------|-------------|--------------------|
+| `200 OK` | The request has succeeded | Returned for successful `GET` and `PUT` requests |
+| `201 Created` | A new resource has been successfully created | Returned when a new wishlist or wishlist item is created |
+| `204 No Content` | The request succeeded but returns no body | Returned when a wishlist or item is successfully deleted |
+| `400 Bad Request` | The request was invalid or malformed | Returned when JSON is invalid or required fields are missing |
+| `403 Forbidden` | The request is understood but refused | Returned when trying to update another user’s wishlist |
+| `404 Not Found` | The requested resource does not exist | Returned when a wishlist or item cannot be found |
+| `405 Method Not Allowed` | The method is not supported for the endpoint | Returned when using an unsupported HTTP method (e.g., `PUT` on `/wishlists`) |
+| `409 Conflict` | A resource conflict occurred | Returned when a request causes a business logic conflict |
+| `415 Unsupported Media Type` | The request has an unsupported Content-Type | Returned when the `Content-Type` is not `application/json` |
+| `500 Internal Server Error` | The server encountered an unexpected error | Returned when an unhandled exception occurs on the server |
+
 
 ## Contents
 
