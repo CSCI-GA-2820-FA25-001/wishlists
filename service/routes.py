@@ -112,6 +112,7 @@ def create_wishlists():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+
 ######################################################################
 # UPDATE WISHLISTS
 ######################################################################
@@ -121,31 +122,31 @@ def update_wishlist(wishlist_id):
 
     wishlist = Wishlists.find_by_id(wishlist_id)
     if not wishlist:
-        abort(status.HTTP_404_NOT_FOUND,
-              description=f"Wishlist with id '{wishlist_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            description=f"Wishlist with id '{wishlist_id}' was not found.",
+        )
 
     if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(status.HTTP_403_FORBIDDEN,
-              description="You do not have permission to update this wishlist.")
+        abort(
+            status.HTTP_403_FORBIDDEN,
+            description="You do not have permission to update this wishlist.",
+        )
 
     data = request.get_json(silent=True)
     if data is None:
-        abort(status.HTTP_400_BAD_REQUEST,
-              description="Invalid or missing JSON body. Set Content-Type: application/json.")
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description="Invalid or missing JSON body. Set Content-Type: application/json.",
+        )
 
-    # Verify that body.id is consistent with the URL (including type safety)
-    if "id" in data:
-        try:
-            if int(data["id"]) != int(wishlist_id):
-                abort(status.HTTP_400_BAD_REQUEST,
-                      description=f"Wishlist ID in body ({data['id']}) does not match ID in URL ({wishlist_id}).")
-        except (TypeError, ValueError):
-            abort(status.HTTP_400_BAD_REQUEST,
-                  description="Field 'id' must be an integer.")
-        # Avoid overwriting primary keys during deserialization
-        data.pop("id", None)
+    # Ensure the id and customer_id are correct
+    if "id" in data and data["id"] != wishlist_id:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description="ID in the body must match the ID in the path.",
+        )
 
-    # Always ignore the visiting customer_id: force it to the original value in the database to prevent unauthorized access
     data["customer_id"] = wishlist.customer_id
 
     try:
