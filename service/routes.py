@@ -124,7 +124,7 @@ def update_wishlist(wishlist_id):
     if not wishlist:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Wishlist with id '{wishlist_id}' was not found.",
+            description=f"Wishlist with id '{wishlist_id}' was not found.",
         )
 
     if wishlist.customer_id != STATE_CUSTOMER_ID:
@@ -138,7 +138,7 @@ def update_wishlist(wishlist_id):
         wishlist.deserialize(data)
         wishlist.update()
     except DataValidationError as error:
-        abort(status.HTTP_400_BAD_REQUEST, str(error))
+        abort(status.HTTP_400_BAD_REQUEST, description=str(error))
 
     return jsonify(wishlist.serialize()), status.HTTP_200_OK
 
