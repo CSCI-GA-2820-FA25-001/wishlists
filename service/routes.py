@@ -269,11 +269,9 @@ def create_wishlist_items(wishlist_id):
 
     # Send the location to GET the new item
     location_url = url_for(
-        # TODO delete this code and uncomment "get_wishlist_items"
-        "index",
-        # "get_wishlist_items",
+        "get_wishlist_items",
         wishlist_id=wishlist.id,
-        wishlist_item_id=wishlist_item.product_id,
+        product_id=wishlist_item.product_id,
         _external=True,
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
