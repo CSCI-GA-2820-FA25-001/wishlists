@@ -118,6 +118,9 @@ def create_wishlists():
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
 def update_wishlist(wishlist_id):
+    """
+    Update a Wishlist
+    """
     app.logger.info("Request to update wishlist with id: %s", wishlist_id)
 
     wishlist = Wishlists.find_by_id(wishlist_id)
@@ -130,10 +133,18 @@ def update_wishlist(wishlist_id):
     if wishlist.customer_id != STATE_CUSTOMER_ID:
         abort(
             status.HTTP_403_FORBIDDEN,
-            f"You do not have permission to update this wishlist.",
+            "You do not have permission to update this wishlist.",
         )
 
     data = request.get_json()
+    if "id" in data and data["id"] != wishlist_id:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description=f"ID in the body {data['id']} does not match the path ID {wishlist_id}.",
+        )
+
+    data["customer_id"] = wishlist.customer_id
+
     try:
         wishlist.deserialize(data)
         wishlist.update()
