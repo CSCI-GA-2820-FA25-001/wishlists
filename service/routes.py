@@ -204,42 +204,30 @@ def delete_wishlist(wishlist_id):
 
 
 ######################################################################
-# READ A WISHLIST ITEM
+# LIST ALL ITEMS IN A WISHLIST
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["GET"])
-def get_wishlist_item(wishlist_id, product_id):
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["GET"])
+def list_wishlist_items(wishlist_id):
     """
-    Get a Wishlist Item
-    This endpoint returns just a wishlist item
+    List all Wishlist Items for a Wishlist
+    This endpoint will return all Wishlist Items for a Wishlist
     """
-    app.logger.info(
-        "Request to retrieve a Wishlist Item with id: %s from Wishlist with id: %s",
-        product_id,
-        wishlist_id,
-    )
+    app.logger.info("Request to list all Wishlist Items for Wishlist %s", wishlist_id)
 
-    # First check if the wishlist exists and abort if it doesn't
+    # See if the wishlist exists and abort if it doesn't
     wishlist = Wishlists.find(wishlist_id)
     if not wishlist:
         app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Wishlist with id '{wishlist_id}' not found",
+            f"Wishlist with id '{wishlist_id}' could not be found.",
         )
 
-    # See if the wishlist item exists and abort if it doesn't
-    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
-    if not wishlist_item:
-        app.logger.warning(
-            "Wishlist Item with id [%s] was not found in Wishlist with id [%s]",
-            product_id,
-            wishlist_id,
-        )
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Wishlist Item with id '{product_id}' not found in Wishlist with id '{wishlist_id}'",
-        )
-    return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
+    # Get all items from the wishlist
+    results = [item.serialize() for item in wishlist.wishlist_items]
+    app.logger.info("Returning %d items", len(results))
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
@@ -284,6 +272,45 @@ def create_wishlist_item(wishlist_id):
         _external=True,
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# READ A WISHLIST ITEM
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["GET"])
+def get_wishlist_item(wishlist_id, product_id):
+    """
+    Get a Wishlist Item
+    This endpoint returns just a wishlist item
+    """
+    app.logger.info(
+        "Request to retrieve a Wishlist Item with id: %s from Wishlist with id: %s",
+        product_id,
+        wishlist_id,
+    )
+
+    # First check if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' not found",
+        )
+
+    # See if the wishlist item exists and abort if it doesn't
+    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
+    if not wishlist_item:
+        app.logger.warning(
+            "Wishlist Item with id [%s] was not found in Wishlist with id [%s]",
+            product_id,
+            wishlist_id,
+        )
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist Item with id '{product_id}' not found in Wishlist with id '{wishlist_id}'",
+        )
+    return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
@@ -355,33 +382,6 @@ def delete_wishlist_item(wishlist_id, product_id):
         wishlist_item.delete()
 
     return "", status.HTTP_204_NO_CONTENT
-
-
-######################################################################
-# LIST ALL ITEMS IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/items", methods=["GET"])
-def list_wishlist_items(wishlist_id):
-    """
-    List all Wishlist Items for a Wishlist
-    This endpoint will return all Wishlist Items for a Wishlist
-    """
-    app.logger.info("Request to list all Wishlist Items for Wishlist %s", wishlist_id)
-
-    # See if the wishlist exists and abort if it doesn't
-    wishlist = Wishlists.find(wishlist_id)
-    if not wishlist:
-        app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Wishlist with id '{wishlist_id}' could not be found.",
-        )
-
-    # Get all items from the wishlist
-    results = [item.serialize() for item in wishlist.wishlist_items]
-    app.logger.info("Returning %d items", len(results))
-
-    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
