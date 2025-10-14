@@ -293,10 +293,10 @@ class TestWishlistsService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
         logging.debug(data)
-        wishlist_item_id = data["product_id"]
+        product_id = data["product_id"]
 
         resp = self.client.delete(
-            f"{BASE_URL}/{wishlist.id}/items/{wishlist_item_id}",
+            f"{BASE_URL}/{wishlist.id}/items/{product_id}",
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
