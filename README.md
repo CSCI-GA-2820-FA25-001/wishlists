@@ -1,4 +1,4 @@
-# NYU DevOps Project Template
+# NYU DevOps Project Wishlist
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
@@ -78,7 +78,57 @@ All tests are located in the /tests folder:
 |---------------------|----------------------|---------------------------|----------------------|
 | `GET` | `/wishlists/<id>/items/<product_id>` | Retrieve a wishlist item | `200 OK`|
 | `POST` | `/wishlists/<id>/items` | Add a new item to a wishlist | `201 Created`|
+| `PUT` | `/wishlists/<id>/items/<product_id>`| Update an existing wishlist item | `200 OK` |
 | `DELETE` | `/wishlists/<id>/items/<product_id>` | Delete an item | `204 No Content`|
+
+## Wishlist Examples
+
+```json
+{
+    "customer_id": 1,
+    "name": "Holiday Gifts 2025",
+    "description": "Christmas presents for family and friends",
+    "category": "gifts",
+    "created_date": "2025-10-12"
+}
+
+{
+    "customer_id": 1,
+    "name": "Japan Trip Essentials",
+    "description": "Things to buy before my Tokyo vacation",
+    "category": "travel",
+    "created_date": "2025-10-12"
+}
+
+{
+    "customer_id": 1,
+    "name": "Tech Upgrades",
+    "description": "Electronics I want to purchase this year",
+    "category": "electronics",
+    "created_date": "2025-10-12"
+}
+```
+
+### Wishlist Item Examples
+```json
+{
+    "product_id": 101,
+    "description": "Apple AirPods Pro",
+    "position": 1
+}
+
+{
+    "product_id": 202,
+    "description": "Nintendo Switch OLED",
+    "position": 2
+}
+
+{
+    "product_id": 303,
+    "description": "Sony WH-1000XM5 Headphones",
+    "position": 3
+}
+```
 
 ## HTTP Status Codes
 
