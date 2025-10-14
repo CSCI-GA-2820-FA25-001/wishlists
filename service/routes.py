@@ -38,8 +38,21 @@ STATE_CUSTOMER_ID = 1
 @app.route("/")
 def index():
     """Root URL response"""
+    app.logger.info("Request for service metadata")
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            {
+                "name": "wishlists-service",
+                "version": "0.1.0",
+                "endpoints": [
+                    "/wishlists",
+                    "/wishlists/{id}",
+                    "/wishlists/{id}/items",
+                    "/wishlists/{id}/items/{item_id}",
+                ],
+                "docs": "See README for examples",
+            }
+        ),
         status.HTTP_200_OK,
     )
 
