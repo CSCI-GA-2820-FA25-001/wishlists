@@ -301,41 +301,43 @@ class TestWishlistsService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_update_wishlist_item(self):
-        """It should Update a wishlist item on a wishlist"""
-        # create a known wishlist item
+    def test_list_wishlist_items(self):
+        """It should List wishlist items for a wishlist"""
         wishlist = self._create_wishlists(1)[0]
-        wishlist_item = WishlistItemsFactory()
-        resp = self.client.post(
-            f"{BASE_URL}/{wishlist.id}/items",
-            json=wishlist_item.serialize(),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(wishlist.id)
 
-        data = resp.get_json()
-        logging.debug(data)
-        product_id = data["product_id"]
+        # Add 5 items to the wishlist
+        for _ in range(5):
+            wishlist_item = WishlistItemsFactory()
+            resp = self.client.post(
+                f"{BASE_URL}/{wishlist.id}/items",
+                json=wishlist_item.serialize(),
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        # send the update back
-        resp = self.client.put(
-            f"{BASE_URL}/{wishlist.id}/items/{product_id}",
-            json=data,
-            content_type="application/json",
-        )
+        # List all items
+        resp = self.client.get(f"{BASE_URL}/{wishlist.id}/items")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # retrieve it back
-        resp = self.client.get(
-            f"{BASE_URL}/{wishlist.id}/items/{product_id}",
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
         data = resp.get_json()
-        logging.debug(data)
-        self.assertEqual(data["product_id"], product_id)
-        self.assertEqual(data["wishlist_id"], wishlist.id)
+        self.assertEqual(len(data), 5)
+
+    def test_list_wishlist_items_empty(self):
+        """It should return an empty list when wishlist has no items"""
+        wishlist = self._create_wishlists(1)[0]
+        self.assertIsNotNone(wishlist.id)
+
+        # List all items
+        resp = self.client.get(f"{BASE_URL}/{wishlist.id}/items")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+        self.assertEqual(data, [])
+
+    def test_list_wishlist_items_wishlist_not_found(self):
+        """It should return 404 when listing items for a non-existent wishlist"""
+        resp = self.client.get(f"{BASE_URL}/9999/items")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     #  U P D A T E   T E S T S
@@ -502,3 +504,39 @@ class TestWishlistsService(TestCase):
             f"{BASE_URL}/999999", json=body, content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_wishlist_item(self):
+        """It should Update a wishlist item on a wishlist"""
+        # create a known wishlist item
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            json=wishlist_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        data = resp.get_json()
+        logging.debug(data)
+        product_id = data["product_id"]
+
+        # send the update back
+        resp = self.client.put(
+            f"{BASE_URL}/{wishlist.id}/items/{product_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # retrieve it back
+        resp = self.client.get(
+            f"{BASE_URL}/{wishlist.id}/items/{product_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["product_id"], product_id)
+        self.assertEqual(data["wishlist_id"], wishlist.id)

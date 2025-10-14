@@ -269,40 +269,14 @@ def create_wishlist_items(wishlist_id):
 
     # Send the location to GET the new item
     location_url = url_for(
-        "get_wishlist_item",
+        # TODO delete this code and uncomment "get_wishlist_items"
+        "index",
+        # "get_wishlist_items",
         wishlist_id=wishlist.id,
-        product_id=wishlist_item.product_id,
+        wishlist_item_id=wishlist_item.product_id,
         _external=True,
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-
-
-######################################################################
-# DELETE A WISHLIST ITEM
-######################################################################
-@app.route(
-    "/wishlists/<int:wishlist_id>/items/<int:product_id>",
-    methods=["DELETE"],
-)
-def delete_wishlist_items(wishlist_id, product_id):
-    """
-    Delete a wishlist item
-
-    This endpoint will delete a wishlist item based the id specified in the path
-    """
-    app.logger.info(
-        "Request to delete wishlist item %s for wishlist id: %s",
-        (product_id, wishlist_id),
-    )
-
-    # See if the wishlist item exists and delete it if it does
-    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
-
-    if wishlist_item:
-        wishlist_item.delete()
-
-    return "", status.HTTP_204_NO_CONTENT
-
 
 ######################################################################
 # UPDATE A WISHLIST ITEM
@@ -311,7 +285,6 @@ def delete_wishlist_items(wishlist_id, product_id):
 def update_wishlist_items(wishlist_id, product_id):
     """
     Update a wishlist item
-
     This endpoint will update a wishlist item based the body that is posted
     """
     app.logger.info(
@@ -347,6 +320,59 @@ def update_wishlist_items(wishlist_id, product_id):
     wishlist.update()
 
     return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
+
+######################################################################
+# DELETE A WISHLIST ITEM
+######################################################################
+@app.route(
+    "/wishlists/<int:wishlist_id>/items/<int:product_id>",
+    methods=["DELETE"],
+)
+def delete_wishlist_items(wishlist_id, product_id):
+    """
+    Delete a wishlist item
+
+    This endpoint will delete a wishlist item based the id specified in the path
+    """
+    app.logger.info(
+        "Request to delete wishlist item %s for wishlist id: %s",
+        (product_id, wishlist_id),
+    )
+
+    # See if the wishlist item exists and delete it if it does
+    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
+
+    if wishlist_item:
+        wishlist_item.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# DELETE ALL ITEMS IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["GET"])
+def list_wishlist_items(wishlist_id):
+    """
+    List all Wishlist Items for a Wishlist
+    This endpoint will return all Wishlist Items for a Wishlist
+    """
+    app.logger.info("Request to list all Wishlist Items for Wishlist %s", wishlist_id)
+
+    # See if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        app.logger.warning("Wishlist with id [%s] was not found", wishlist_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' could not be found.",
+        )
+
+    # Get all items from the wishlist
+    results = [item.serialize() for item in wishlist.wishlist_items]
+    app.logger.info("Returning %d items", len(results))
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
