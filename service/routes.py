@@ -141,6 +141,7 @@ def update_wishlist(wishlist_id):
             status.HTTP_400_BAD_REQUEST,
             description=f"ID in the body {data['id']} does not match the path ID {wishlist_id}.",
         )
+
     data["customer_id"] = wishlist.customer_id
 
     try:
@@ -356,6 +357,48 @@ def update_wishlist_items(wishlist_id, product_id):
 
     return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
 
+######################################################################
+# UPDATE A WISHLIST ITEM
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items/<int:product_id>", methods=["PUT"])
+def update_wishlist_items(wishlist_id, product_id):
+    """
+    Update a wishlist item
+    This endpoint will update a wishlist item based the body that is posted
+    """
+    app.logger.info(
+        "Request to update wishlist item %s for wishlist id: %s",
+        (product_id, wishlist_id),
+    )
+    check_content_type("application/json")
+
+    # See if the wishlist exists and abort if it doesn't
+    wishlist = Wishlists.find(wishlist_id)
+    if not wishlist:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist with id '{wishlist_id}' was not found.",
+        )
+
+    # See if the wishlist_item exists and abort if it doesn't
+    wishlist_item = WishlistItems.find_by_wishlist_and_product(wishlist_id, product_id)
+    if not wishlist_item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Wishlist item with id '{product_id}' could not be found.",
+        )
+
+    # Update from the json in the body of the request
+    try:
+        wishlist_item.deserialize(request.get_json())
+        wishlist_item.wishlist_id = wishlist_id
+        wishlist_item.product_id = product_id
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    wishlist_item.update()
+
+    return jsonify(wishlist_item.serialize()), status.HTTP_200_OK
 
 ######################################################################
 # DELETE A WISHLIST ITEM
