@@ -54,6 +54,7 @@ class WishlistItems(db.Model, PersistentBase):
 
     def deserialize(self, data: dict) -> None:
         """Convert a dictionary into a WishlistItem"""
+        # pylint: disable=duplicate-code
         try:
             if not isinstance(data["product_id"], int):
                 raise TypeError("product_id must be an integer")

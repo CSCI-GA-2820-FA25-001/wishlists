@@ -66,6 +66,7 @@ class Wishlists(db.Model, PersistentBase):
 
     def deserialize(self, data: dict) -> None:
         """Convert a dictionary into a Wishlist"""
+        # pylint: disable=duplicate-code
         try:
             if not isinstance(data["customer_id"], int):
                 raise TypeError("customer_id must be an integer")
@@ -119,38 +120,33 @@ class Wishlists(db.Model, PersistentBase):
         return wishlist.wishlist_items
 
     @classmethod
-    def move_item(cls, wishlist_id: int, product_id: int, before_position: int):
-        """Move an item to a new position in the Wishlist"""
-        wishlist = cls.find_by_id(wishlist_id)
-        if not wishlist:
-            raise DataValidationError(f"Wishlist with id {wishlist_id} not found")
+    def _find_item_and_before(
+        cls, wishlist_items, product_id: int, before_position: int
+    ):
+        """Locate the moving item and the 'before' item and its index.
 
-        wishlist_items = wishlist.wishlist_items
-
-        if wishlist_items is None or len(wishlist_items) == 0:
-            raise DataValidationError(f"Wishlist with id {wishlist_id} has no items")
-
-        if len(wishlist_items) == 1:
-            # Only one item, no need to move
-            return wishlist_items[0]
-
+        Returns a tuple (item, before, before_index).
+        """
         item = None
         before = None
         before_index = -1
-        for i in range(len(wishlist_items)):
-            i_item = wishlist_items[i]
+        for index, i_item in enumerate(wishlist_items):
             if i_item.product_id == product_id:
                 item = i_item
                 continue
 
             if i_item.position >= before_position and before is None:
                 before = i_item
-                before_index = i
+                before_index = index
 
-        if item is None:
-            raise DataValidationError(
-                f"Item with product_id {product_id} not found in wishlist {wishlist_id}"
-            )
+        return item, before, before_index
+
+    @classmethod
+    def _compute_new_position(cls, wishlist_items, before, before_index: int):
+        """Compute a new position for an item given the located `before` item.
+
+        Returns a tuple (new_position, prev_position).
+        """
         new_position = None
         prev_position = None
         if before is None:
@@ -164,17 +160,49 @@ class Wishlists(db.Model, PersistentBase):
             new_position = (before.position + prev.position) // 2
             prev_position = prev.position
 
-        if before is not None:
-            if (
-                new_position <= 0
-                or new_position == before.position
-                or new_position == prev_position
-            ):
-                cls.reposition(wishlist_id)
-                before = WishlistItems.find_by_wishlist_and_product(
-                    wishlist_id, before.product_id
-                )
-                return cls.move_item(wishlist_id, product_id, before.position)
+        return new_position, prev_position
+
+    @classmethod
+    def move_item(cls, wishlist_id: int, product_id: int, before_position: int):
+        """Move an item to a new position in the Wishlist"""
+        wishlist = cls.find_by_id(wishlist_id)
+        if not wishlist:
+            raise DataValidationError(f"Wishlist with id {wishlist_id} not found")
+
+        wishlist_items = wishlist.wishlist_items
+
+        if not wishlist_items:
+            raise DataValidationError(f"Wishlist with id {wishlist_id} has no items")
+
+        if len(wishlist_items) == 1:
+            # Only one item, no need to move
+            return wishlist_items[0]
+
+        item, before, before_index = cls._find_item_and_before(
+            wishlist_items, product_id, before_position
+        )
+
+        if item is None:
+            raise DataValidationError(
+                f"Item with product_id {product_id} not found in wishlist {wishlist_id}"
+            )
+
+        new_position, prev_position = cls._compute_new_position(
+            wishlist_items, before, before_index
+        )
+
+        if before is not None and (
+            new_position <= 0
+            or new_position == before.position
+            or new_position == prev_position
+        ):
+            # Positions are too close or invalid: renumber and retry using the
+            # new 'before' position after repositioning.
+            cls.reposition(wishlist_id)
+            before = WishlistItems.find_by_wishlist_and_product(
+                wishlist_id, before.product_id
+            )
+            return cls.move_item(wishlist_id, product_id, before.position)
 
         item.position = new_position
         try:
