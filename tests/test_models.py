@@ -18,7 +18,7 @@
 Test cases for Pet Model
 """
 
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,ungrouped-imports
 import os
 import logging
 import random
@@ -227,21 +227,20 @@ class TestWishlistsModel(TestCase):
                 # Return normal values like a dict would
                 if key == "customer_id":
                     return 123
-                elif key == "name":
+                if key == "name":
                     return "Test Wishlist"
-                elif key == "created_date":
+                if key == "created_date":
                     return "2025-10-09"
-                elif key == "updated_date":
+                if key == "updated_date":
                     return None
-                else:
-                    raise KeyError(key)
+                raise KeyError(key)
 
             def __contains__(self, key):
                 # So `"created_date" in data` works
                 return key in {"customer_id", "name", "created_date", "updated_date"}
 
             def get(self, key, default=None):
-                # Simulate a broken .get() method that always raises an error
+                """Simulate a broken .get() method that always raises an error"""
                 raise AttributeError(
                     f"Simulated broken .get() method for key: {key}, default: {default}"
                 )
@@ -290,14 +289,13 @@ class TestWishlistsModel(TestCase):
                 # Return normal values like a dict would
                 if key == "wishlist_id":
                     return 1
-                elif key == "product_id":
+                if key == "product_id":
                     return 42
-                elif key == "description":
+                if key == "description":
                     return "This is a product"
-                elif key == "position":
+                if key == "position":
                     return 1000
-                else:
-                    raise KeyError(key)
+                raise KeyError(key)
 
             def __contains__(self, key):
                 # So `"created_date" in data` works
@@ -309,7 +307,7 @@ class TestWishlistsModel(TestCase):
                 }
 
             def get(self, key, default=None):
-                # Simulate a broken .get() method that always raises an error
+                """Simulate a broken .get() method that always raises an error"""
                 raise AttributeError(
                     f"Simulated broken .get() method for key: {key}, default: {default}"
                 )
@@ -457,9 +455,9 @@ class TestWishlistsModel(TestCase):
         wishlist = WishlistsFactory()
         wishlist.create()
         self.assertIsNotNone(wishlist.id)
-        SIZE = 5
+        test_size = 5
         # Create items with non-sequential positions
-        positions = random.sample(range(1, SIZE * 1000, 1000), 3)
+        positions = random.sample(range(1, test_size * 1000, 1000), 3)
         for pos in positions:
             item = WishlistItemsFactory(wishlist_id=wishlist.id)
             item.position = pos
@@ -497,16 +495,16 @@ class TestWishlistsModel(TestCase):
         wishlist = WishlistsFactory()
         wishlist.create()
         self.assertIsNotNone(wishlist.id)
-        SIZE = 5
+        test_size = 5
         # Create items with sequential positions
-        for i in range(SIZE):
+        for i in range(test_size):
             item = WishlistItemsFactory(wishlist_id=wishlist.id)
             item.position = (i + 1) * 1000
             item.create()
         found_items = sorted(
             WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
         )
-        self.assertEqual(len(found_items), SIZE)
+        self.assertEqual(len(found_items), test_size)
 
         # Move the last item to the second position
         item_to_move = found_items[-1]
@@ -539,16 +537,16 @@ class TestWishlistsModel(TestCase):
         wishlist = WishlistsFactory()
         wishlist.create()
         self.assertIsNotNone(wishlist.id)
-        SIZE = 3
+        test_size = 3
         # Create items with sequential positions
-        for i in range(SIZE):
+        for i in range(test_size):
             item = WishlistItemsFactory(wishlist_id=wishlist.id)
             item.position = i + 1
             item.create()
         found_items = sorted(
             WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
         )
-        self.assertEqual(len(found_items), SIZE)
+        self.assertEqual(len(found_items), test_size)
 
         # Move the last item to the position of the first item, causing a conflict
         item_to_move = found_items[-1]
@@ -569,16 +567,16 @@ class TestWishlistsModel(TestCase):
         wishlist = WishlistsFactory()
         wishlist.create()
         self.assertIsNotNone(wishlist.id)
-        SIZE = 2
+        test_size = 2
         # Create items with sequential positions
-        for i in range(SIZE):
+        for i in range(test_size):
             item = WishlistItemsFactory(wishlist_id=wishlist.id)
             item.position = (i + 1) * 1000
             item.create()
         found_items = sorted(
             WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
         )
-        self.assertEqual(len(found_items), SIZE)
+        self.assertEqual(len(found_items), test_size)
 
         # Move the last item to the front
         item_to_move = found_items[-1]
@@ -598,16 +596,16 @@ class TestWishlistsModel(TestCase):
         wishlist = WishlistsFactory()
         wishlist.create()
         self.assertIsNotNone(wishlist.id)
-        SIZE = 2
+        test_size = 2
         # Create items with sequential positions
-        for i in range(SIZE):
+        for i in range(test_size):
             item = WishlistItemsFactory(wishlist_id=wishlist.id)
             item.position = i + 1
             item.create()
         found_items = sorted(
             WishlistItems.find_all_by_wishlist_id(wishlist.id), key=lambda x: x.position
         )
-        self.assertEqual(len(found_items), SIZE)
+        self.assertEqual(len(found_items), test_size)
 
         # Move the first item to the end
         item_to_move = found_items[0]
