@@ -73,13 +73,22 @@ def list_wishlists():
     """
     app.logger.info("Request to list all Wishlists")
 
-    wishlists = []
-
     # Check for query parameter to filter by customer_id
     customer_id = request.args.get("customer_id")
 
-    if customer_id:
-        app.logger.info("Filtering by customer_id: %s", customer_id)
+    name_query = request.args.get("name")
+
+    if name_query is not None and customer_id is not None:
+        app.logger.info(
+            "Filtering wishlists for customer_id: %s by name containing: %s",
+            customer_id,
+            name_query,
+        )
+        wishlists = Wishlists.find_all_by_customer_id_and_name_like(
+            int(customer_id), name_query
+        )
+    elif customer_id is not None:
+        app.logger.info("Returning all Wishlists for customer_id: %s", customer_id)
         wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
     else:
         app.logger.info("Returning all Wishlists")

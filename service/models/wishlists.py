@@ -105,6 +105,14 @@ class Wishlists(db.Model, PersistentBase):
         return cls.query.filter(cls.customer_id == customer_id).all()
 
     @classmethod
+    def find_all_by_customer_id_and_name_like(cls, customer_id: int, name: int):
+        """Find all Wishlists for a given customer where the name contains the given substring (case-insensitive)."""
+        pattern = f"%{name}%"
+        return cls.query.filter(
+            cls.customer_id == customer_id, cls.name.ilike(pattern)
+        ).all()
+
+    @classmethod
     def reposition(cls, wishlist_id: int):
         """Reposition items in a Wishlist to ensure positions are sequential starting from 1000, with increments of 1000"""
         wishlist = cls.find_by_id(wishlist_id)

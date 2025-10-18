@@ -160,6 +160,47 @@ class TestWishlistsService(TestCase):
         for wishlist in data:
             self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
 
+    def test_list_wishlists_by_customer_id_and_name_like(self):
+        """It should Get a list of Wishlists filtered by customer_id and name containing a substring"""
+        # Create wishlists with the default customer_id
+        for i in range(3):
+            wishlist = WishlistsFactory(name=f"My Wishlist {i}")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Create wishlists with the default customer_id
+        for i in range(2):
+            wishlist = WishlistsFactory(name=f"Other Wishlist {i}")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Query for wishlists by customer_id and name containing a substring
+        resp = self.client.get(
+            BASE_URL, query_string={"customer_id": CUSTOMER_ID, "name": "My Wishlist"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+
+        for wishlist in data:
+            self.assertIn("My Wishlist", wishlist["name"])
+
+        # Query for wishlists by customer_id and name containing a substring
+        resp = self.client.get(
+            BASE_URL,
+            query_string={"customer_id": CUSTOMER_ID, "name": "Other Wishlist"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+
+        for wishlist in data:
+            self.assertIn("Other Wishlist", wishlist["name"])
+
     def test_create_wishlist(self):
         """It should Create a new Wishlist"""
         wishlist = WishlistsFactory()
