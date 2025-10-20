@@ -373,6 +373,31 @@ class TestWishlistsModel(TestCase):
         found = Wishlists.find_all_by_customer_id(CUSTOMER_ID)
         self.assertEqual(len(found), 5)
 
+    def test_find_wishlist_by_customer_id_and_name_like(self):
+        """It should find Wishlists by customer_id and name containing a substring"""
+
+        # Create 5 Wishlists with names containing "My Wishlist"
+        for i in range(5):
+            resource = WishlistsFactory(name=f"My Wishlist {i}")
+            resource.create()
+
+        # Create 2 Wishlists with names containing "Other Wishlist"
+        for i in range(2):
+            resource = WishlistsFactory(name=f"Other Wishlist {i}")
+            resource.create()
+
+        # Find Wishlists by customer_id and name containing "My Wishlist"
+        found = Wishlists.find_all_by_customer_id_and_name_like(
+            CUSTOMER_ID, "My Wishlist"
+        )
+        self.assertEqual(len(found), 5)
+
+        # Find Wishlists by customer_id and name containing "Other Wishlist"
+        found = Wishlists.find_all_by_customer_id_and_name_like(
+            CUSTOMER_ID, "Other Wishlist"
+        )
+        self.assertEqual(len(found), 2)
+
     def test_find_all_by_wishlist_id(self):
         """It should find all WishlistItems by wishlist_id"""
         wishlists = []
