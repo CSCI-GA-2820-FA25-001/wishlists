@@ -22,6 +22,7 @@ Test cases for Pet Model
 import os
 import logging
 import random
+from datetime import date
 from unittest import TestCase
 from unittest.mock import patch
 from pytest import warns
@@ -203,7 +204,7 @@ class TestWishlistsModel(TestCase):
         self.assertEqual(wishlist.description, data["description"])
         self.assertEqual(wishlist.category, data["category"])
         self.assertEqual(wishlist.created_date.isoformat(), data["created_date"])
-        self.assertIsNone(wishlist.updated_date)
+        self.assertEqual(wishlist.updated_date, date.today())
 
     def test_wishlist_deserialize_with_invalid_data(self):
         """It should raise DataValidationError on bad data"""
