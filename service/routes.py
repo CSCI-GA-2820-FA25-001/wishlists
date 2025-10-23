@@ -21,6 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Wishlists
 """
 
+from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
@@ -277,10 +278,30 @@ def create_wishlist_item(wishlist_id):
 
     # Create an wishlist_item from the json data
     wishlist_item = WishlistItems()
-    wishlist_item.deserialize(request.get_json())
+    try:
+        wishlist_item.deserialize(request.get_json())
 
-    # Append the wishlist_item to the wishlist
-    wishlist.wishlist_items.append(wishlist_item)
+        # Check if the product is already in the wishlist
+        existing_items = WishlistItems.find_by_wishlist_and_product(
+            wishlist_id, wishlist_item.product_id
+        )
+        if existing_items:
+            abort(
+                status.HTTP_409_CONFLICT,
+                f"Product with id '{wishlist_item.product_id}' is already in the wishlist.",
+            )
+        last_position = WishlistItems.find_last_position(wishlist_id)
+
+        wishlist_item.wishlist_id = wishlist_id
+        wishlist_item.position = last_position + 1000
+
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    wishlist_item.create()
+
+    # Update the wishlist's updated_date
+    wishlist.updated_date = date.fromisoformat(date.today().isoformat())
     wishlist.update()
 
     # Prepare a message to return
@@ -368,7 +389,9 @@ def update_wishlist_items(wishlist_id, product_id):
 
     # Update from the json in the body of the request
     try:
-        wishlist_item.deserialize(request.get_json())
+        data = request.get_json()
+        data.pop("position", None)  # Position should not be updated via this method
+        wishlist_item.deserialize(data)
         wishlist_item.wishlist_id = wishlist_id
         wishlist_item.product_id = product_id
     except DataValidationError as error:
