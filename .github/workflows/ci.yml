@@ -40,7 +40,7 @@ jobs:
           pipenv install --system --dev
 
       - name: Run unit tests
-        run: make test
+        run: pytest --pspec --cov=service --cov-fail-under=95
         env:
           DATABASE_URI: "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 
