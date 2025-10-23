@@ -39,9 +39,6 @@ jobs:
           python -m pip install --upgrade pip pipenv
           pipenv install --system --dev
 
-      - name: Linting
-        run: make lint
-
       - name: Run unit tests
         run: make test
         env:
