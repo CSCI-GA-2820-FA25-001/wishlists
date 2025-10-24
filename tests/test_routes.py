@@ -676,3 +676,65 @@ class TestWishlistsService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_move_wishlist_item(self):
+        """It should Move a wishlist item to a new position"""
+        # create a known wishlist item
+        wishlist = WishlistsFactory()
+        wishlist.create()
+
+        # create 2 wishlist items
+        wishlist_items = []
+        for _ in range(2):
+            wishlist_item = WishlistItemsFactory(wishlist_id=wishlist.id)
+            wishlist_item.position = (
+                WishlistItems.find_last_position(wishlist.id) + 1000
+            )
+            wishlist_item.create()
+            wishlist_items.append(wishlist_item)
+
+        # move the last item to the front
+        data = {"before_position": 0}
+
+        resp = self.client.patch(
+            f"{BASE_URL}/{wishlist.id}/items/{wishlist_items[-1].product_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(wishlist_items[-1].position, 500)
+
+        data = {"position": 0}
+        resp = self.client.patch(
+            f"{BASE_URL}/{wishlist.id}/items/{wishlist_items[0].product_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(wishlist_items[0].position, 250)
+
+    def test_move_wishlist_item_not_found(self):
+        """It should return 400 when moving an item on a non-existent wishlist"""
+        data = {"before_position": 0}
+        resp = self.client.patch(
+            f"{BASE_URL}/9999/items/1",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_move_wishlist_item_invalid_data(self):
+        """It should return 400 when moving an item with invalid data"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        wishlist_item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        wishlist_item.position = WishlistItems.find_last_position(wishlist.id) + 1000
+        wishlist_item.create()
+
+        data = {"before_position": "not-an-integer"}
+        resp = self.client.patch(
+            f"{BASE_URL}/{wishlist.id}/items/{wishlist_item.product_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

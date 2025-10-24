@@ -430,6 +430,43 @@ def delete_wishlist_item(wishlist_id, product_id):
 
 
 ######################################################################
+# Move a wishlist item
+######################################################################
+@app.route(
+    "/wishlists/<int:wishlist_id>/items/<int:product_id>",
+    methods=["PATCH"],
+)
+def move_wishlist_item(wishlist_id, product_id):
+    """
+    Move a wishlist item to a new position
+
+    This endpoint will move a wishlist item to a new position in the wishlist
+    """
+    app.logger.info(
+        "Request to move wishlist item %s for wishlist id: %s",
+        (product_id, wishlist_id),
+    )
+    check_content_type("application/json")
+
+    data = request.get_json()
+    before_position = data.get("before_position")
+    if before_position is None:
+        before_position = data.get("position")
+    if before_position is None or not isinstance(before_position, int):
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "before_position must be provided and must be an integer",
+        )
+
+    try:
+        item = Wishlists.move_item(wishlist_id, product_id, before_position)
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    return jsonify(item.serialize()), status.HTTP_204_NO_CONTENT
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
