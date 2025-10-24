@@ -201,6 +201,87 @@ class TestWishlistsService(TestCase):
         for wishlist in data:
             self.assertIn("Other Wishlist", wishlist["name"])
 
+    def test_list_wishlists_by_category(self):
+        """It should Get a list of Wishlists filtered by category (case-insensitive) for the current user"""
+        # Create wishlists with different categories for the current user (CUSTOMER_ID)
+        for i in range(3):
+            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        for i in range(2):
+            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="books")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        for i in range(1):
+            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="travel")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Create some wishlists for a different customer with "gifts" category
+        # These should NOT be returned when filtering by category
+        for i in range(2):
+            wishlist = WishlistsFactory(customer_id=999, category="gifts")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Query for wishlists by category "gifts" (exact match, case-insensitive)
+        # Should only return wishlists for the current user (CUSTOMER_ID)
+        resp = self.client.get(BASE_URL, query_string={"category": "gifts"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+
+        for wishlist in data:
+            self.assertEqual(wishlist["category"].lower(), "gifts")
+            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+
+        # Test case-insensitivity - search with "GIFTS" should return same results
+        resp = self.client.get(BASE_URL, query_string={"category": "GIFTS"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+
+        for wishlist in data:
+            self.assertEqual(wishlist["category"].lower(), "gifts")
+            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+
+        # Query for wishlists by category "books"
+        resp = self.client.get(BASE_URL, query_string={"category": "books"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+
+        for wishlist in data:
+            self.assertEqual(wishlist["category"].lower(), "books")
+            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+
+    def test_list_wishlists_by_nonexistent_category(self):
+        """It should return an empty list when filtering by a non-existent category for the current user"""
+        # Create some wishlists with known categories for the current user
+        for i in range(3):
+            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
+            resp = self.client.post(
+                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Query for a category that doesn't exist for the current user
+        resp = self.client.get(BASE_URL, query_string={"category": "nonexistent"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+        self.assertEqual(data, [])
+
     def test_create_wishlist(self):
         """It should Create a new Wishlist"""
         wishlist = WishlistsFactory()
