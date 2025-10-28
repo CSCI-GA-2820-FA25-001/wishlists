@@ -61,7 +61,8 @@ class WishlistItems(db.Model, PersistentBase):
             self.wishlist_id = data.get("wishlist_id")
             self.product_id = data["product_id"]
             self.description = data.get("description")
-            self.position = data.get("position", 0)
+            if self.position is None:
+                self.position = data.get("position", 0)
         except AttributeError as e:
             raise DataValidationError(f"Invalid attribute: {e.args[0]}") from e
         except KeyError as e:

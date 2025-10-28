@@ -76,16 +76,13 @@ class Wishlists(db.Model, PersistentBase):
             self.name = data["name"]
             self.description = data.get("description")
             self.category = data.get("category")
-            self.created_date = (
-                date.fromisoformat(data["created_date"])
-                if "created_date" in data
-                else date.today()
-            )
-            self.updated_date = (
-                date.fromisoformat(data["updated_date"])
-                if "updated_date" in data and data["updated_date"] is not None
-                else None
-            )
+            if self.created_date is None:
+                self.created_date = (
+                    date.fromisoformat(data["created_date"])
+                    if "created_date" in data
+                    else date.today()
+                )
+            self.updated_date = date.today()
         except AttributeError as e:
             raise DataValidationError(f"Invalid attribute: {e.args[0]}") from e
         except KeyError as e:
@@ -110,6 +107,13 @@ class Wishlists(db.Model, PersistentBase):
         pattern = f"%{name}%"
         return cls.query.filter(
             cls.customer_id == customer_id, cls.name.ilike(pattern)
+        ).all()
+
+    @classmethod
+    def find_by_category(cls, customer_id: int, category: str):
+        """Find all Wishlists by customer_id and category (case-insensitive)"""
+        return cls.query.filter(
+            cls.customer_id == customer_id, cls.category.ilike(category)
         ).all()
 
     @classmethod
