@@ -12,10 +12,13 @@ The Wishlist Service implements a REST API that allows clients to:
 - Create, Read, Update, Delete, and List wishlists
 - Add and remove items from a wishlist
 - Retrieve a specific wishlist item
+- Filter wishlists by **category** (`?category=gifts`)
+- Filter wishlists by **name** (`?name=holiday`)
+- Reorder items inside a wishlist using `PATCH /wishlists/<id>/items <product_id>`
 
 The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately.
 
-This project follows Test-Driven Development(TDD) pratices and includes complete model and route tets with at lease 95% code coverage.
+This project follows Test-Driven Development(TDD) practices and includes complete model and route tests with at lease 95% code coverage.
 
 ### JSON-only Responses
 All API endpoints in this service return **JSON-formatted responses**, including error messages (e.g., 400, 404, 415, 500).  
@@ -31,7 +34,7 @@ This behavior is implemented through custom error handlers in `service/common/er
 
 ### Installation
 
-Clone the reposity and open it in VSCode: 
+Clone the repository and open it in VSCode: 
 ```bash
     git clone <your_repo_url>
     cd <your_repo_name>
@@ -74,6 +77,13 @@ All tests are located in the /tests folder:
 | `PUT` | `/wishlists/<id>` | Update an existing wishlist | `200 OK` |
 | `DELETE` | `/wishlists/<id>` | Delete a wishlist | `204 No Content`|
 
+#### Query Parameters for `/wishlists`
+- `category=<value>` — Filter by **category** (exact match, case-insensitive)  
+- `name=<value>` — Filter by **name** (fuzzy match, case-insensitive)  
+
+If neither query parameter is provided, the endpoint returns **all wishlists** for the current user.
+
+
 ### Wishlist Items
 | **Method** | **Endpoint** | **Description** | **Response** |
 |---------------------|----------------------|---------------------------|----------------------|
@@ -81,6 +91,7 @@ All tests are located in the /tests folder:
 | `POST` | `/wishlists/<id>/items` | Add a new item to a wishlist | `201 Created`|
 | `PUT` | `/wishlists/<id>/items/<product_id>`| Update an existing wishlist item | `200 OK` |
 | `DELETE` | `/wishlists/<id>/items/<product_id>` | Delete an item | `204 No Content`|
+| `PATCH` | `/wishlists/<id>/items/<product_id>` | Reorder a wishlist item (move before another item) | `200 OK` |
 
 ## Wishlist Examples
 
