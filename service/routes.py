@@ -21,6 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Wishlists
 """
 
+from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
@@ -78,6 +79,8 @@ def list_wishlists():
 
     name_query = request.args.get("name")
 
+    category_query = request.args.get("category")
+
     if name_query is not None and customer_id is not None:
         app.logger.info(
             "Filtering wishlists for customer_id: %s by name containing: %s",
@@ -90,6 +93,13 @@ def list_wishlists():
     elif customer_id is not None:
         app.logger.info("Returning all Wishlists for customer_id: %s", customer_id)
         wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
+    elif category_query is not None:
+        app.logger.info(
+            "Filtering wishlists for current user (customer_id: %s) by category: %s",
+            STATE_CUSTOMER_ID,
+            category_query,
+        )
+        wishlists = Wishlists.find_by_category(STATE_CUSTOMER_ID, category_query)
     else:
         app.logger.info("Returning all Wishlists")
         wishlists = Wishlists.all()
@@ -277,10 +287,30 @@ def create_wishlist_item(wishlist_id):
 
     # Create an wishlist_item from the json data
     wishlist_item = WishlistItems()
-    wishlist_item.deserialize(request.get_json())
+    try:
+        wishlist_item.deserialize(request.get_json())
 
-    # Append the wishlist_item to the wishlist
-    wishlist.wishlist_items.append(wishlist_item)
+        # Check if the product is already in the wishlist
+        existing_items = WishlistItems.find_by_wishlist_and_product(
+            wishlist_id, wishlist_item.product_id
+        )
+        if existing_items:
+            abort(
+                status.HTTP_409_CONFLICT,
+                f"Product with id '{wishlist_item.product_id}' is already in the wishlist.",
+            )
+        last_position = WishlistItems.find_last_position(wishlist_id)
+
+        wishlist_item.wishlist_id = wishlist_id
+        wishlist_item.position = last_position + 1000
+
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    wishlist_item.create()
+
+    # Update the wishlist's updated_date
+    wishlist.updated_date = date.fromisoformat(date.today().isoformat())
     wishlist.update()
 
     # Prepare a message to return
@@ -368,7 +398,9 @@ def update_wishlist_items(wishlist_id, product_id):
 
     # Update from the json in the body of the request
     try:
-        wishlist_item.deserialize(request.get_json())
+        data = request.get_json()
+        data.pop("position", None)  # Position should not be updated via this method
+        wishlist_item.deserialize(data)
         wishlist_item.wishlist_id = wishlist_id
         wishlist_item.product_id = product_id
     except DataValidationError as error:
@@ -404,6 +436,43 @@ def delete_wishlist_item(wishlist_id, product_id):
         wishlist_item.delete()
 
     return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# Move a wishlist item
+######################################################################
+@app.route(
+    "/wishlists/<int:wishlist_id>/items/<int:product_id>",
+    methods=["PATCH"],
+)
+def move_wishlist_item(wishlist_id, product_id):
+    """
+    Move a wishlist item to a new position
+
+    This endpoint will move a wishlist item to a new position in the wishlist
+    """
+    app.logger.info(
+        "Request to move wishlist item %s for wishlist id: %s",
+        (product_id, wishlist_id),
+    )
+    check_content_type("application/json")
+
+    data = request.get_json()
+    before_position = data.get("before_position")
+    if before_position is None:
+        before_position = data.get("position")
+    if before_position is None or not isinstance(before_position, int):
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "before_position must be provided and must be an integer",
+        )
+
+    try:
+        item = Wishlists.move_item(wishlist_id, product_id, before_position)
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+
+    return jsonify(item.serialize()), status.HTTP_204_NO_CONTENT
 
 
 ######################################################################

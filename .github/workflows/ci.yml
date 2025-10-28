@@ -53,6 +53,7 @@ jobs:
         env:
           DATABASE_URI: "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
 
+
       ######################################################################
       # Create a CODECOV_TOKEN in Settings->Secrets and variables->Actions
       # and then uncomment the CodeCov action during hands-on lab
