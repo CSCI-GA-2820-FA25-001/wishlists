@@ -52,4 +52,3 @@ jobs:
         run: pytest --pspec --cov=service --cov-fail-under=95
         env:
           DATABASE_URI: "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
-
