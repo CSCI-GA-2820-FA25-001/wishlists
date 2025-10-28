@@ -39,11 +39,19 @@ jobs:
           python -m pip install --upgrade pip pipenv
           pipenv install --system --dev
 
+      - name: Run flake8 and pylint
+        run: |
+          echo "Running flake8 (fatal checks)..."
+          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          echo "Running flake8 (style/complexity)..."
+          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+          echo "Running pylint..."
+          pylint service tests --max-line-length=127
+
       - name: Run unit tests
         run: pytest --pspec --cov=service --cov-fail-under=95
         env:
           DATABASE_URI: "postgresql+psycopg://postgres:postgres@postgres:5432/testdb"
-
 
       ######################################################################
       # Create a CODECOV_TOKEN in Settings->Secrets and variables->Actions
