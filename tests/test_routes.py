@@ -204,21 +204,21 @@ class TestWishlistsService(TestCase):
     def test_list_wishlists_by_category(self):
         """It should Get a list of Wishlists filtered by category (case-insensitive) for the current user"""
         # Create wishlists with different categories for the current user (CUSTOMER_ID)
-        for i in range(3):
+        for _ in range(3):
             wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
             )
             self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        for i in range(2):
+        for _ in range(2):
             wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="books")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
             )
             self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        for i in range(1):
+        for _ in range(1):
             wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="travel")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
@@ -227,7 +227,7 @@ class TestWishlistsService(TestCase):
 
         # Create some wishlists for a different customer with "gifts" category
         # These should NOT be returned when filtering by category
-        for i in range(2):
+        for _ in range(2):
             wishlist = WishlistsFactory(customer_id=999, category="gifts")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
@@ -268,7 +268,7 @@ class TestWishlistsService(TestCase):
     def test_list_wishlists_by_nonexistent_category(self):
         """It should return an empty list when filtering by a non-existent category for the current user"""
         # Create some wishlists with known categories for the current user
-        for i in range(3):
+        for _ in range(3):
             wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
