@@ -79,6 +79,8 @@ def list_wishlists():
 
     name_query = request.args.get("name")
 
+    category_query = request.args.get("category")
+
     if name_query is not None and customer_id is not None:
         app.logger.info(
             "Filtering wishlists for customer_id: %s by name containing: %s",
@@ -91,6 +93,13 @@ def list_wishlists():
     elif customer_id is not None:
         app.logger.info("Returning all Wishlists for customer_id: %s", customer_id)
         wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
+    elif category_query is not None:
+        app.logger.info(
+            "Filtering wishlists for current user (customer_id: %s) by category: %s",
+            STATE_CUSTOMER_ID,
+            category_query,
+        )
+        wishlists = Wishlists.find_by_category(STATE_CUSTOMER_ID, category_query)
     else:
         app.logger.info("Returning all Wishlists")
         wishlists = Wishlists.all()
