@@ -163,7 +163,7 @@ class TestWishlistsService(TestCase):
     def test_list_wishlists_by_customer_id_and_name_like(self):
         """It should Get a list of Wishlists filtered by customer_id and name containing a substring"""
         # Create wishlists with the default customer_id
-        for igiin range(3):
+        for i in range(3):
             wishlist = WishlistsFactory(name=f"My Wishlist {i}")
             resp = self.client.post(
                 BASE_URL, json=wishlist.serialize(), content_type="application/json"
