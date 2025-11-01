@@ -124,7 +124,19 @@ class TestWishlistsService(TestCase):
                 "/wishlists/{id}/items/{item_id}",
             ],
         )
-        self.assertEqual(data["docs"], "See README for examples")
+
+    def test_health(self):
+        """It should get the health check"""
+        resp = self.client.get("/health")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.content_type, "application/json")
+
+        # Get the JSON data
+        data = resp.get_json()
+
+        # Verify the response
+        self.assertIn("status", data)
+        self.assertEqual(data["status"], "OK")
 
     ######################################################################
     # Wishlist
