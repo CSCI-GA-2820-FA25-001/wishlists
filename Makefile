@@ -1,10 +1,14 @@
 # These can be overidden with env vars.
-REGISTRY ?= cluster-registry:5000
+REGISTRY_HOST ?= cluster-registry
+REGISTRY_ADDR ?= 0.0.0.0
+REGISTRY_PORT ?= 5000
+REGISTRY ?= $(REGISTRY_HOST):$(REGISTRY_PORT)
 IMAGE_NAME ?= wishlists
 IMAGE_TAG ?= 1.0
 IMAGE ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 PLATFORM ?= "linux/amd64,linux/arm64"
 CLUSTER ?= nyu-devops
+LOADBALANCER_PORT ?= 8080
 
 # Optional flags for k3d cluster create, toggled via env vars
 K3D_FLAGS ?=
@@ -68,7 +72,7 @@ secret: ## Generate a secret hex key
 .PHONY: cluster
 cluster: ## Create a K3D Kubernetes cluster with load balancer and registry
 	$(info Creating Kubernetes cluster $(CLUSTER) with a registry and 2 worker nodes...)
-	k3d cluster create $(CLUSTER) $(K3D_FLAGS) --agents 2 --registry-create cluster-registry:0.0.0.0:5000 --port '8080:80@loadbalancer'
+	k3d cluster create $(CLUSTER) $(K3D_FLAGS) --agents 2 --registry-create $(REGISTRY_HOST):$(REGISTRY_ADDR):$(REGISTRY_PORT) --port '$(LOADBALANCER_PORT):80@loadbalancer'
 
 .PHONY: cluster-rm
 cluster-rm: ## Remove a K3D Kubernetes cluster
