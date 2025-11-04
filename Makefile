@@ -6,6 +6,18 @@ IMAGE ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 PLATFORM ?= "linux/amd64,linux/arm64"
 CLUSTER ?= nyu-devops
 
+# Optional flags for k3d cluster create, toggled via env vars
+K3D_FLAGS ?=
+ifeq ($(NO_HOSTIP),1)
+K3D_FLAGS += --no-hostip
+endif
+ifeq ($(TRACE),1)
+K3D_FLAGS += --trace
+endif
+ifeq ($(NO_ROLLBACK),1)
+K3D_FLAGS += --no-rollback
+endif
+
 .SILENT:
 
 .PHONY: help
@@ -56,12 +68,12 @@ secret: ## Generate a secret hex key
 .PHONY: cluster
 cluster: ## Create a K3D Kubernetes cluster with load balancer and registry
 	$(info Creating Kubernetes cluster $(CLUSTER) with a registry and 2 worker nodes...)
-	k3d cluster create $(CLUSTER) --agents 2 --registry-create cluster-registry:0.0.0.0:5000 --port '8080:80@loadbalancer'
+	k3d cluster create $(CLUSTER) $(K3D_FLAGS) --agents 2 --registry-create cluster-registry:0.0.0.0:5000 --port '8080:80@loadbalancer'
 
 .PHONY: cluster-rm
 cluster-rm: ## Remove a K3D Kubernetes cluster
 	$(info Removing Kubernetes cluster...)
-	k3d cluster delete nyu-devops
+	k3d cluster delete $(CLUSTER)
 
 .PHONY: deploy
 deploy: ## Deploy the service on local Kubernetes
