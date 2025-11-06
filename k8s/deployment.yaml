@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wishlists
+  labels:
+    app: wishlists
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wishlists
+  template:
+    metadata:
+      labels:
+        app: wishlists
+    spec:
+      containers:
+      - name: wishlists
+        image: cluster-registry:5000/wishlists:1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: DATABASE_URI
+          value: postgresql+psycopg://postgres:postgres@postgres:5432/wishlists
+        - name: RETRY_COUNT
+          value: "10"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: "0.50"
+            memory: "128Mi"
+          requests:
+            cpu: "0.25"
+            memory: "64Mi"
+
