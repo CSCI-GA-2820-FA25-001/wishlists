@@ -9,6 +9,8 @@ COPY Pipfile Pipfile.lock ./
 RUN python -m pip install --upgrade pip pipenv && \
     pipenv install --system --deploy
 
+RUN pip install psycopg2-binary
+
 # Copy the application contents
 COPY wsgi.py .
 COPY service/ ./service/
