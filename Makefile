@@ -64,7 +64,7 @@ cluster-rm: ## Remove a K3D Kubernetes cluster
 	k3d cluster delete nyu-devops
 
 .PHONY: deploy
-deploy: ## Deploy the service on local Kubernetes
+deploy: push ## Deploy the service on local Kubernetes
 	$(info Deploying service locally...)
 	kubectl apply -R -f k8s/
 
