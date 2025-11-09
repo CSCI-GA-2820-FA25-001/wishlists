@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Wishlist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        input:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-retrieve {
+            background-color: #667eea;
+            color: white;
+            min-width: 120px;
+        }
+        
+        .btn-retrieve:hover {
+            background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-retrieve:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-update {
+            background-color: #48bb78;
+            color: white;
+            min-width: 120px;
+        }
+        
+        .btn-update:hover:not(:disabled) {
+            background-color: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn-update:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .btn-reset {
+            background-color: #e2e8f0;
+            color: #333;
+        }
+        
+        .btn-reset:hover:not(:disabled) {
+            background-color: #cbd5e0;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .alert-error {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        .alert-info {
+            background-color: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .form-section {
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Update Wishlist</h1>
+        <p class="subtitle">Update and modify wishlist information</p>
+        
+        <!-- Alerts -->
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+        <div id="alertInfo" class="alert alert-info"></div>
+        
+        <!-- Update Section -->
+        <div class="section">
+            <div class="section-title">1. Update Wishlist</div>
+            <div class="form-group">
+                <label for="resourceId">Wishlist ID</label>
+                <input 
+                    type="number" 
+                    id="resourceId" 
+                    placeholder="Enter wishlist ID to update"
+                    min="1"
+                >
+            </div>
+            <div class="button-group">
+                <button class="btn-retrieve" id="retrieveBtn">Update</button>
+            </div>
+        </div>
+        
+        <!-- Form Section -->
+        <div class="section form-section" id="updateSection">
+            <div class="section-title">2. Modify Wishlist</div>
+            
+            <div class="form-group">
+                <label for="id">ID (Read-only)</label>
+                <input 
+                    type="number" 
+                    id="id" 
+                    disabled
+                    readonly
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="customerId">Customer ID</label>
+                <input 
+                    type="number" 
+                    id="customerId"
+                    min="1"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="name">Name *</label>
+                <input 
+                    type="text" 
+                    id="name"
+                    placeholder="Wishlist name"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea 
+                    id="description"
+                    placeholder="Wishlist description"
+                ></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input 
+                    type="text" 
+                    id="category"
+                    placeholder="e.g., gifts, travel, electronics"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="createdDate">Created Date</label>
+                <input 
+                    type="text" 
+                    id="createdDate"
+                    disabled
+                    readonly
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="updatedDate">Updated Date</label>
+                <input 
+                    type="text" 
+                    id="updatedDate"
+                    disabled
+                    readonly
+                >
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-reset" id="resetBtn">Reset</button>
+                <button class="btn-update" id="updateBtn">Update</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // State management
+        const state = {
+            retrieved: false,
+            originalData: null
+        };
+        
+        // DOM elements
+        const resourceIdInput = document.getElementById('resourceId');
+        const retrieveBtn = document.getElementById('retrieveBtn');
+        const updateSection = document.getElementById('updateSection');
+        const updateBtn = document.getElementById('updateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        const alertSuccess = document.getElementById('alertSuccess');
+        const alertError = document.getElementById('alertError');
+        const alertInfo = document.getElementById('alertInfo');
+        
+        const formInputs = {
+            id: document.getElementById('id'),
+            customerId: document.getElementById('customerId'),
+            name: document.getElementById('name'),
+            description: document.getElementById('description'),
+            category: document.getElementById('category'),
+            createdDate: document.getElementById('createdDate'),
+            updatedDate: document.getElementById('updatedDate')
+        };
+        
+        // Show alert message
+        function showAlert(type, message) {
+            hideAllAlerts();
+            const alertElement = type === 'success' ? alertSuccess : 
+                               type === 'error' ? alertError : alertInfo;
+            alertElement.textContent = message;
+            alertElement.classList.add('show');
+        }
+        
+        // Hide all alerts
+        function hideAllAlerts() {
+            alertSuccess.classList.remove('show');
+            alertError.classList.remove('show');
+            alertInfo.classList.remove('show');
+        }
+        
+        // Populate form with data
+        function populateForm(data) {
+            formInputs.id.value = data.id || '';
+            formInputs.customerId.value = data.customer_id || '';
+            formInputs.name.value = data.name || '';
+            formInputs.description.value = data.description || '';
+            formInputs.category.value = data.category || '';
+            formInputs.createdDate.value = data.created_date || '';
+            formInputs.updatedDate.value = data.updated_date || '';
+            
+            state.originalData = JSON.parse(JSON.stringify(data));
+        }
+        
+        // Clear form
+        function clearForm() {
+            Object.values(formInputs).forEach(input => {
+                input.value = '';
+            });
+            state.retrieved = false;
+            state.originalData = null;
+            updateSection.classList.remove('active');
+        }
+        
+        // Enable/disable update form
+        function toggleFormState(enabled) {
+            Object.keys(formInputs).forEach(key => {
+                if (key !== 'id' && key !== 'createdDate' && key !== 'updatedDate') {
+                    formInputs[key].disabled = !enabled;
+                }
+            });
+            updateBtn.disabled = !enabled;
+            resetBtn.disabled = !enabled;
+        }
+        
+        // Update wishlist
+        async function retrieveWishlist() {
+            const id = resourceIdInput.value.trim();
+            
+            if (!id) {
+                showAlert('error', 'Please enter a Wishlist ID');
+                return;
+            }
+            
+            // Show loading state
+            retrieveBtn.disabled = true;
+            const originalText = retrieveBtn.textContent;
+            retrieveBtn.innerHTML = '<span class="spinner"></span>Loading...';
+            
+            try {
+                const response = await fetch(`/wishlists/${id}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showAlert('error', `Wishlist with ID '${id}' was not found.`);
+                    } else {
+                        showAlert('error', `Error: ${response.status} ${response.statusText}`);
+                    }
+                    clearForm();
+                } else {
+                    const data = await response.json();
+                    populateForm(data);
+                    state.retrieved = true;
+                    updateSection.classList.add('active');
+                    toggleFormState(true);
+                    showAlert('success', `Wishlist ${id} loaded successfully!`);
+                }
+            } catch (error) {
+                showAlert('error', `Error loading wishlist: ${error.message}`);
+                clearForm();
+            } finally {
+                retrieveBtn.disabled = false;
+                retrieveBtn.textContent = originalText;
+            }
+        }
+        
+        // Update wishlist
+        async function updateWishlist() {
+            if (!state.retrieved) {
+                showAlert('error', 'Please update a wishlist first');
+                return;
+            }
+            
+            const id = formInputs.id.value;
+            
+            // Validate required fields
+            if (!formInputs.name.value.trim()) {
+                showAlert('error', 'Name field is required');
+                return;
+            }
+            
+            // Build update data
+            const updateData = {
+                customer_id: parseInt(formInputs.customerId.value) || state.originalData.customer_id,
+                name: formInputs.name.value,
+                description: formInputs.description.value || null,
+                category: formInputs.category.value || null
+            };
+            
+            // Show loading state
+            updateBtn.disabled = true;
+            const originalText = updateBtn.textContent;
+            updateBtn.innerHTML = '<span class="spinner"></span>Updating...';
+            
+            try {
+                const response = await fetch(`/wishlists/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        showAlert('error', `Error: ${errorData.message || response.statusText}`);
+                    } catch {
+                        showAlert('error', `Error: ${response.status} ${response.statusText}`);
+                    }
+                } else {
+                    const data = await response.json();
+                    populateForm(data);
+                    showAlert('success', `Wishlist ${id} updated successfully!`);
+                }
+            } catch (error) {
+                showAlert('error', `Error updating wishlist: ${error.message}`);
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = originalText;
+            }
+        }
+        
+        // Reset form to original data
+        function resetForm() {
+            if (state.originalData) {
+                populateForm(state.originalData);
+            }
+        }
+        
+        // Event listeners
+        retrieveBtn.addEventListener('click', retrieveWishlist);
+        resourceIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                retrieveWishlist();
+            }
+        });
+        
+        updateBtn.addEventListener('click', updateWishlist);
+        resetBtn.addEventListener('click', resetForm);
+        
+        // Initialize - disable update form by default
+        toggleFormState(false);
+    </script>
+</body>
+</html>

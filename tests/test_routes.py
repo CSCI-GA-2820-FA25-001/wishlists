@@ -122,6 +122,7 @@ class TestWishlistsService(TestCase):
                 "/wishlists/{id}",
                 "/wishlists/{id}/items",
                 "/wishlists/{id}/items/{item_id}",
+                "/ui/update",
             ],
         )
 
@@ -137,6 +138,12 @@ class TestWishlistsService(TestCase):
         # Verify the response
         self.assertIn("status", data)
         self.assertEqual(data["status"], "OK")
+
+    def test_update_ui(self):
+        """It should serve the update UI page"""
+        resp = self.client.get("/ui/update")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn("text/html", resp.content_type)
 
     ######################################################################
     # Wishlist

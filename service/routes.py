@@ -22,7 +22,7 @@ and Delete Wishlists
 """
 
 from datetime import date
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, url_for, abort, render_template
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
 from service.common import status
@@ -50,6 +50,7 @@ def index():
                     "/wishlists/{id}",
                     "/wishlists/{id}/items",
                     "/wishlists/{id}/items/{item_id}",
+                    "/ui/update",
                 ],
                 "docs": "See README for examples",
             }
@@ -66,6 +67,16 @@ def health():
     """Health Check"""
     app.logger.info("Request for health check")
     return jsonify({"status": "OK"}), status.HTTP_200_OK
+
+
+######################################################################
+# UI - UPDATE RESOURCE PAGE
+######################################################################
+@app.route("/ui/update", methods=["GET"])
+def update_resource_ui():
+    """Serve the Update Resource UI page"""
+    app.logger.info("Request for Update Resource UI page")
+    return render_template("update_resource.html")
 
 
 ######################################################################
