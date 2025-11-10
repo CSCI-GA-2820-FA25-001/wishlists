@@ -98,32 +98,11 @@ class TestWishlistsService(TestCase):
     ######################################################################
 
     def test_index(self):
-        """It should call the home page"""
+        """It should return the HTML home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.content_type, "application/json")
-
-        # Get the JSON data
-        data = resp.get_json()
-
-        # Verify all required fields are present
-        self.assertIn("name", data)
-        self.assertIn("version", data)
-        self.assertIn("endpoints", data)
-        self.assertIn("docs", data)
-
-        # Verify the values are correct
-        self.assertEqual(data["name"], "wishlists-service")
-        self.assertEqual(data["version"], "0.1.0")
-        self.assertEqual(
-            data["endpoints"],
-            [
-                "/wishlists",
-                "/wishlists/{id}",
-                "/wishlists/{id}/items",
-                "/wishlists/{id}/items/{item_id}",
-            ],
-        )
+        self.assertEqual(resp.mimetype, "text/html")
+        self.assertIn(b"Wishlists REST API Service", resp.data)
 
     def test_health(self):
         """It should get the health check"""
