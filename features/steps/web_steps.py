@@ -32,7 +32,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
 
-ID_PREFIX = ""
+ID_PREFIX = "wishlist_"
 
 
 def save_screenshot(context: Any, filename: str) -> None:
