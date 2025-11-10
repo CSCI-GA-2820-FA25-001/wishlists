@@ -77,7 +77,7 @@
              <div class="form-group">
               <label class="control-label col-sm-2" for="wishlist_created_date">Created Date:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="wishlist_created_date" placeholder="Auto-generated created_date">
+                <input type="text" class="form-control" id="wishlist_created_date" placeholder="Auto-generated created_date" readonly>
               </div>
             </div>
 
@@ -85,7 +85,7 @@
              <div class="form-group">
               <label class="control-label col-sm-2" for="wishlist_update_date">Update Date:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="wishlist_update_date" placeholder="Auto-generated update_date">
+                <input type="text" class="form-control" id="wishlist_update_date" placeholder="Auto-generated update_date" readonly>
               </div>
             </div>
 
@@ -101,6 +101,77 @@
           </div> <!-- form horizontal -->
         </div> <!-- end well -->
       </div> <!-- end Form -->
+
+      <!-- Items -->
+      <div class="col-md-12" id="items_panel" style="display:none;">
+        <h3>Wishlist Items</h3>
+        <div class="well">
+
+          <div class="form-horizontal">
+            <div class="form-group">
+               <label class="control-label col-sm-2" for="item_product_id">Item ID:</label>
+                <div class="col-sm-6">
+                  <input type="text" class="form-control" id="item_product_id" placeholder="Enter ID of Item">
+                </div>
+                <div class="col-sm-4">
+                  <button type="submit" class="btn btn-primary" id="retrieve-item-btn">Retrieve</button>
+                  <button type="submit" class="btn btn-danger" id="delete-item-btn">Delete</button>
+                </div>
+              </div>
+            </div> <!-- form horizontal -->
+
+            <div class="form-horizontal">
+
+            <!-- DESCRIPTION -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_description">Item Description:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="item_description" placeholder="Enter description for Item">
+              </div>
+            </div>
+
+            <!-- Wishlist ID (display only) -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_wishlist_id">Wishlist ID:</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="item_wishlist_id" placeholder="Selected Wishlist ID" readonly>
+              </div>
+            </div>
+
+
+            <!-- Before Position (for Move) -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_before_position">Before Position:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="item_before_position" placeholder="Move before this position (integer)" disabled>
+              </div>
+            </div>
+
+            <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <button type="button" class="btn btn-info"    id="search-items-btn"  disabled>Search Items</button>
+              <button type="button" class="btn btn-success" id="create-item-btn" disabled>Create Item</button>
+              <button type="button" class="btn btn-warning" id="update-item-btn" disabled>Update Item</button>
+              <button type="button" class="btn btn-default" id="move-item-btn"   disabled>Move Item</button>
+            </div>
+          </div>
+        </div>
+
+          <!-- Items Table -->
+          <div class="table-responsive" id="items_results">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Product ID</th>
+                  <th>Position</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="items_results_body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <!-- Search Results -->
       <div class="table-responsive col-md-12" id="search_results">
