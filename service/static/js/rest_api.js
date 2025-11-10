@@ -179,7 +179,7 @@ $(function () {
     // ****************************************
 
     $("#clear-btn").click(function () {
-        $("#wishlist_id").val("");s
+        $("#wishlist_id").val("");
         $("#flash_message").empty();
         clear_form_data();
         setSelectedWishlist(null);
