@@ -88,31 +88,51 @@ def list_wishlists():
     app.logger.info("Request to list all Wishlists")
 
     # Check for query parameter to filter by customer_id
-    customer_id = request.args.get("customer_id")
+    customer_id = request.args.get("customer_id", type=int)
 
     name_query = request.args.get("name")
 
     category_query = request.args.get("category")
 
-    if name_query is not None and customer_id is not None:
+    if (
+        customer_id is not None
+        and category_query is not None
+        and name_query is not None
+    ):
         app.logger.info(
-            "Filtering wishlists for customer_id: %s by name containing: %s",
+            "Filter by customer_id=%s, category=%s, name like=%s",
             customer_id,
+            category_query,
             name_query,
         )
-        wishlists = Wishlists.find_all_by_customer_id_and_name_like(
-            int(customer_id), name_query
+        wishlists = Wishlists.find_by_customer_category_name_like(
+            customer_id, category_query, name_query
         )
+
+    elif customer_id is not None and category_query is not None:
+        app.logger.info(
+            "Filter by customer_id=%s AND category=%s", customer_id, category_query
+        )
+        wishlists = Wishlists.find_by_customer_and_category(customer_id, category_query)
+
+    elif customer_id is not None and name_query is not None:
+        app.logger.info(
+            "Filter by customer_id=%s AND name like=%s", customer_id, name_query
+        )
+        wishlists = Wishlists.find_all_by_customer_id_and_name_like(
+            customer_id, name_query
+        )
+
     elif customer_id is not None:
-        app.logger.info("Returning all Wishlists for customer_id: %s", customer_id)
-        wishlists = Wishlists.find_all_by_customer_id(int(customer_id))
+        app.logger.info("Filter by customer_id=%s", customer_id)
+        wishlists = Wishlists.find_all_by_customer_id(customer_id)
+    elif name_query is not None:
+        wishlists = Wishlists.find_by_name_like(name_query)
     elif category_query is not None:
         app.logger.info(
-            "Filtering wishlists for current user (customer_id: %s) by category: %s",
-            STATE_CUSTOMER_ID,
-            category_query,
+            "Filter by category=%s (global, no customer_id)", category_query
         )
-        wishlists = Wishlists.find_by_category(STATE_CUSTOMER_ID, category_query)
+        wishlists = Wishlists.find_by_category(category_query)
     else:
         app.logger.info("Returning all Wishlists")
         wishlists = Wishlists.all()

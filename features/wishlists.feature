@@ -14,7 +14,7 @@ Background:
 
 Scenario: The server is running
     When I visit the "Home Page"
-    Then I should see "Wishlist RESTful Service" in the title
+    Then I should see "Wishlists RESTful Service" in the title
     And I should not see "404 Not Found"
 
 Scenario: Create a Wishlist
@@ -94,17 +94,15 @@ Scenario: Update a Wishlist
     And I should see "Birthday Wishlist" in the results
     And I should not see "Birthday Gifts" in the results
 
-Scenario: Delete a Wishlist
+Scenario: Delete a Wishlist by ID
     When I visit the "Home Page"
     And I set the "Name" to "Electronics"
     And I press the "Search" button
     Then I should see the message "Success"
-    When I copy the "Name" field
-    And I press the "Clear" button
-    And I paste the "Name" field
-    And I press the "Delete" button
+    When I press the "Delete" button
     Then I should see the message "Success"
     When I press the "Clear" button
+    And I set the "Name" to "Electronics"
     And I press the "Search" button
     Then I should see the message "Success"
     And I should not see "Electronics" in the results
