@@ -34,7 +34,7 @@ Scenario: Create a Wishlist
 
 Scenario: List all wishlists
     When I visit the "Home Page"
-    And I press the "Search" button
+    And I press the "List" button
     Then I should see the message "Success"
     And I should see "Birthday Gifts" in the results
     And I should see "Holiday" in the results

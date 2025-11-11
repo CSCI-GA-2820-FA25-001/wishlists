@@ -33,7 +33,70 @@ $(function () {
         $("#flash_message").append(message);
     }
 
+    $("#list-btn").click(function () {
 
+        console.log("DEBUG: List all clicked");
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/wishlists`,
+            contentType: "application/json",
+            data: ''
+        })
+
+        ajax.done(function(res){
+            console.log("DEBUG: List all SUCCESS");
+            console.log("DEBUG: Response:", res);
+            console.log("DEBUG: Number of results:", res.length);
+            
+            $("#search_results").empty();
+            console.log("DEBUG: search_results cleared");
+            
+            let table = '<table class="table table-striped" cellpadding="10">'
+            table += '<thead><tr>'
+            table += '<th class="col-md-2">ID</th>'
+            table += '<th class="col-md-2">Customer ID</th>'
+            table += '<th class="col-md-2">Name</th>'
+            table += '<th class="col-md-2">Description</th>'
+            table += '<th class="col-md-2">Category</th>'
+            table += '</tr></thead><tbody>'
+            
+            let firstWishlist = "";
+            for(let i = 0; i < res.length; i++) {
+                let wishlist = res[i];
+                console.log("DEBUG: Adding row", i, ":", wishlist);
+                table +=  `<tr id="row_${i}"><td>${wishlist.id}</td><td>${wishlist.customer_id}</td><td>${wishlist.name}</td><td>${wishlist.description}</td><td>${wishlist.category}</td></tr>`;
+                if (i == 0) {
+                    firstWishlist = wishlist;
+                }
+            }
+            table += '</tbody></table>';
+            
+            console.log("DEBUG: Table HTML length:", table.length);
+            
+            $("#search_results").append(table);
+            console.log("DEBUG: Table appended to #search_results");
+
+            // copy the first result to the form
+            if (firstWishlist != "") {
+                update_form_data(firstWishlist)
+                console.log("DEBUG: First wishlist copied to form");
+            }
+
+            flash_message("Success")
+            console.log("DEBUG: Flash message set to Success");
+        });
+
+        ajax.fail(function(res){
+            console.error("DEBUG: List all FAILED");
+            console.error("DEBUG: Error response:", res);
+            flash_message(res.responseJSON.message)
+        });
+
+    });
+    
     // ******************************************************
     //  U T I L I T Y   F U N C T I O N S FOR WISHLIST ITEMS
     // ******************************************************
