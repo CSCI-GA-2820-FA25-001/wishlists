@@ -216,6 +216,7 @@ $(function () {
     // ****************************************
 
     $("#delete-btn").click(function () {
+
         let wishlist_id = $("#wishlist_id").val();
 
         $("#flash_message").empty();
@@ -253,7 +254,72 @@ $(function () {
     // ****************************************
 
     $("#search-btn").click(function () {
+        let name = $("#wishlist_name").val();
+        let category = $("#wishlist_category").val();
+        let customer_id = $("#wishlist_customer_id").val();
 
+        let queryString = "";
+        if (name) {
+            queryString += 'name=' + name;
+        }
+        if (category) {
+            if (queryString.length > 0) {
+                queryString += '&category=' + category;
+            } else {
+                queryString += 'category=' + category;
+            }
+        }
+        if (customer_id) {
+            if (queryString.length > 0) {
+                queryString += '&customer_id=' + customer_id;
+            } else {
+                queryString += 'customer_id=' + customer_id;
+            }
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/wishlists?${queryString}`,
+            contentType: "application/json",
+            data: ''
+        })
+
+        ajax.done(function(res){
+            //alert(res.toSource())
+            $("#search_results").empty();
+            let table = '<table class="table table-striped" cellpadding="10">'
+            table += '<thead><tr>'
+            table += '<th class="col-md-2">ID</th>'
+            table += '<th class="col-md-2">Name</th>'
+            table += '<th class="col-md-2">Category</th>'
+            table += '<th class="col-md-2">Customer ID</th>'
+            table += '<th class="col-md-2">Created Date</th>'
+            table += '<th class="col-md-2">Updated Date</th>'
+            table += '</tr></thead><tbody>'
+            let firstWishlist = "";
+            for(let i = 0; i < res.length; i++) {
+                let wishlist = res[i];
+                table +=  `<tr id="row_${i}"><td>${wishlist.id}</td><td>${wishlist.name}</td><td>${wishlist.category}</td><td>${wishlist.customer_id}</td><td>${wishlist.created_date}</td><td>${wishlist.updated_date}</td></tr>`;
+                if (i == 0) {
+                    firstWishlist = wishlist;
+                }
+            }
+            table += '</tbody></table>';
+            $("#search_results").append(table);
+
+            // copy the first result to the form
+            if (firstWishlist != "") {
+                update_form_data(firstWishlist)
+            }
+
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
     });
 
 

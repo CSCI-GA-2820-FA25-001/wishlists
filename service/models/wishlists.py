@@ -102,7 +102,7 @@ class Wishlists(db.Model, PersistentBase):
         return cls.query.filter(cls.customer_id == customer_id).all()
 
     @classmethod
-    def find_all_by_customer_id_and_name_like(cls, customer_id: int, name: int):
+    def find_all_by_customer_id_and_name_like(cls, customer_id: int, name: str):
         """Find all Wishlists for a given customer where the name contains the given substring (case-insensitive)."""
         pattern = f"%{name}%"
         return cls.query.filter(
@@ -110,10 +110,33 @@ class Wishlists(db.Model, PersistentBase):
         ).all()
 
     @classmethod
-    def find_by_category(cls, customer_id: int, category: str):
-        """Find all Wishlists by customer_id and category (case-insensitive)"""
+    def find_by_category(cls, category: str):
+        """Find all Wishlists by category only (case-insensitive, global)."""
+        return cls.query.filter(cls.category.ilike(category)).all()
+
+    @classmethod
+    def find_by_name_like(cls, name: str):
+        """Find all Wishlists by name like."""
+        pattern = f"%{name}%"
+        return cls.query.filter(cls.name.ilike(pattern)).all()
+
+    @classmethod
+    def find_by_customer_and_category(cls, customer_id: int, category: str):
+        """Find all Wishlists by customer_id AND category (case-insensitive)."""
         return cls.query.filter(
             cls.customer_id == customer_id, cls.category.ilike(category)
+        ).all()
+
+    @classmethod
+    def find_by_customer_category_name_like(
+        cls, customer_id: int, category: str, name: str
+    ):
+        """Find all Wishlists by customer_id AND category AND name-like (case-insensitive)."""
+        pattern = f"%{name}%"
+        return cls.query.filter(
+            cls.customer_id == customer_id,
+            cls.category.ilike(category),
+            cls.name.ilike(pattern),
         ).all()
 
     @classmethod

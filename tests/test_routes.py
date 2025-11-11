@@ -192,69 +192,162 @@ class TestWishlistsService(TestCase):
         for wishlist in data:
             self.assertIn("Other Wishlist", wishlist["name"])
 
-    def test_list_wishlists_by_category(self):
-        """It should Get a list of Wishlists filtered by category (case-insensitive) for the current user"""
-        # Create wishlists with different categories for the current user (CUSTOMER_ID)
+    def test_list_wishlists_by_customer_and_category(self):
+        """It should list by customer_id AND category"""
         for _ in range(3):
-            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
-            resp = self.client.post(
-                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            w = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts", name="A")
+            r = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
             )
-            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(r.status_code, status.HTTP_201_CREATED)
 
         for _ in range(2):
-            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="books")
-            resp = self.client.post(
-                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            w = WishlistsFactory(customer_id=CUSTOMER_ID, category="books", name="B")
+            r = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
             )
-            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(r.status_code, status.HTTP_201_CREATED)
 
-        for _ in range(1):
-            wishlist = WishlistsFactory(customer_id=CUSTOMER_ID, category="travel")
-            resp = self.client.post(
-                BASE_URL, json=wishlist.serialize(), content_type="application/json"
-            )
-            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-        # Create some wishlists for a different customer with "gifts" category
-        # These should NOT be returned when filtering by category
         for _ in range(2):
-            wishlist = WishlistsFactory(customer_id=999, category="gifts")
-            resp = self.client.post(
-                BASE_URL, json=wishlist.serialize(), content_type="application/json"
+            w = WishlistsFactory(customer_id=999, category="gifts", name="C")
+            r = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
             )
-            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(r.status_code, status.HTTP_201_CREATED)
 
-        # Query for wishlists by category "gifts" (exact match, case-insensitive)
-        # Should only return wishlists for the current user (CUSTOMER_ID)
-        resp = self.client.get(BASE_URL, query_string={"category": "gifts"})
+        resp = self.client.get(
+            BASE_URL, query_string={"customer_id": CUSTOMER_ID, "category": "GIFTS"}
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 3)
+        for wl in data:
+            self.assertEqual(wl["customer_id"], CUSTOMER_ID)
+        self.assertTrue(all(wl["category"].lower() == "gifts" for wl in data))
 
-        for wishlist in data:
-            self.assertEqual(wishlist["category"].lower(), "gifts")
-            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+    def test_list_wishlists_by_name_like_global(self):
+        """It should list by name (global, name-like & case-insensitive)"""
+        samples = [
+            {"customer_id": CUSTOMER_ID, "name": "Birthday Gifts"},
+            {"customer_id": CUSTOMER_ID, "name": "Gift List"},
+            {"customer_id": 999, "name": "my gift ideas"},
+            {"customer_id": 888, "name": "GIFT registry"},
+        ]
 
-        # Test case-insensitivity - search with "GIFTS" should return same results
-        resp = self.client.get(BASE_URL, query_string={"category": "GIFTS"})
+        for s in samples:
+            w = WishlistsFactory(**s, category="misc")
+            r = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
+            )
+            self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        w = WishlistsFactory(customer_id=CUSTOMER_ID, name="Holiday", category="misc")
+        r = self.client.post(
+            BASE_URL, json=w.serialize(), content_type="application/json"
+        )
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(BASE_URL, query_string={"name": "GiFt"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
+        self.assertTrue(all("gift" in wl["name"].lower() for wl in data))
 
-        for wishlist in data:
-            self.assertEqual(wishlist["category"].lower(), "gifts")
-            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+    def test_list_wishlists_by_customer_category_name_like(self):
+        """It should list by customer_id AND category AND name-like"""
 
-        # Query for wishlists by category "books"
-        resp = self.client.get(BASE_URL, query_string={"category": "books"})
+        pos = [
+            {"customer_id": CUSTOMER_ID, "category": "gifts", "name": "My Gift 1"},
+            {"customer_id": CUSTOMER_ID, "category": "GIFTS", "name": "gift ideas 2"},
+        ]
+
+        for s in pos:
+            w = WishlistsFactory(**s, description="x")
+            r = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
+            )
+            self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        w = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts", name="Holiday")
+        r = self.client.post(
+            BASE_URL, json=w.serialize(), content_type="application/json"
+        )
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        w = WishlistsFactory(
+            customer_id=CUSTOMER_ID, category="books", name="Gift book"
+        )
+        r = self.client.post(
+            BASE_URL, json=w.serialize(), content_type="application/json"
+        )
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        w = WishlistsFactory(customer_id=999, category="gifts", name="Awesome Gift")
+        r = self.client.post(
+            BASE_URL, json=w.serialize(), content_type="application/json"
+        )
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(
+            BASE_URL,
+            query_string={
+                "customer_id": CUSTOMER_ID,
+                "category": "gifts",
+                "name": "GiFt",
+            },
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 2)
+        for wl in data:
+            self.assertEqual(wl["customer_id"], CUSTOMER_ID)
+            self.assertEqual(wl["category"].lower(), "gifts")
+            self.assertIn("gift", wl["name"].lower())
 
-        for wishlist in data:
-            self.assertEqual(wishlist["category"].lower(), "books")
-            self.assertEqual(wishlist["customer_id"], CUSTOMER_ID)
+    def test_list_wishlists_by_category_global(self):
+        """It should list wishlists by category globally"""
+
+        for _ in range(3):
+            w = WishlistsFactory(customer_id=CUSTOMER_ID, category="gifts")
+            resp = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        for _ in range(2):
+            w = WishlistsFactory(customer_id=CUSTOMER_ID, category="books")
+            resp = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        w = WishlistsFactory(customer_id=CUSTOMER_ID, category="travel")
+        resp = self.client.post(
+            BASE_URL, json=w.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        for _ in range(2):
+            w = WishlistsFactory(customer_id=999, category="gifts")
+            resp = self.client.post(
+                BASE_URL, json=w.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(BASE_URL, query_string={"category": "gifts"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+
+        self.assertEqual(len(data), 5)
+        for wl in data:
+            self.assertEqual(wl["category"].lower(), "gifts")
+
+        resp = self.client.get(BASE_URL, query_string={"category": "GIFTS"})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data2 = resp.get_json()
+        self.assertEqual(len(data2), 5)
+        for wl in data2:
+            self.assertEqual(wl["category"].lower(), "gifts")
 
     def test_list_wishlists_by_nonexistent_category(self):
         """It should return an empty list when filtering by a non-existent category for the current user"""
