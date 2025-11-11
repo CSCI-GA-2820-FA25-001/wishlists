@@ -596,19 +596,32 @@ $(function () {
                     return;
                 }
 
-                // IMPORTANT: When dropping onto a target row we want to insert
-                // the dragged item before the item that currently comes AFTER
-                // the target (i.e. the next sibling). That means the before_position
-                // should be the next row's position. If there's no next row (target is last),
-                // choose a position after the target (targetPosition + 1000) so it appends.
+                // Find the dragged row in the table to determine its original position
+                var $draggedRow = $tbody.find('tr[data-product-id="' + draggedProductId + '"]');
+                var draggedPos = null;
+                if ($draggedRow.length > 0) {
+                    draggedPos = $draggedRow.data('position');
+                }
+
+                // Compute before_position depending on move direction
                 var $next = $(this).next('tr');
-                var beforePos;
-                if ($next.length > 0) {
-                    beforePos = $next.data('position');
+                var beforePos = null;
+                if (draggedPos !== null && draggedPos !== undefined && parseInt(draggedPos, 10) > parseInt(targetPosition, 10)) {
+                    // moving up: insert before target
+                    beforePos = parseInt(targetPosition, 10);
                 } else {
-                    // ensure numeric
-                    var tp = parseInt(targetPosition, 10) || 0;
-                    beforePos = tp + 1000;
+                    // moving down or unknown: insert before next row (i.e., after target)
+                    if ($next.length > 0) {
+                        beforePos = $next.data('position');
+                    } else {
+                        var tp = parseInt(targetPosition, 10) || 0;
+                        beforePos = tp + 1000;
+                    }
+                }
+
+                if (beforePos === undefined || beforePos === null) {
+                    flash_message('Could not determine insertion position');
+                    return;
                 }
 
                 // Send PATCH to move dragged item before the computed position
