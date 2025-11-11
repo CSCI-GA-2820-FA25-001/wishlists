@@ -100,7 +100,7 @@ Scenario: Delete a Wishlist by ID
     And I press the "Search" button
     Then I should see the message "Success"
     When I press the "Delete" button
-    Then I should see the message "Success"
+    Then I should see the message "Wishlist has been Deleted!"
     When I press the "Clear" button
     And I set the "Name" to "Electronics"
     And I press the "Search" button
