@@ -216,8 +216,9 @@ $(function () {
     // Update a Wishlist
     // ****************************************
 
-    // Update handler is defined later (avoids duplicate empty handler)
-
+    $("#update-btn").click(function () {
+        
+    });
 
     // ****************************************
     // Retrieve a Wishlist
