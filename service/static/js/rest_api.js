@@ -217,6 +217,25 @@ $(function () {
 
     $("#delete-btn").click(function () {
 
+        let wishlist_id = $("#wishlist_id").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `/wishlists/${wishlist_id}`,
+            contentType: "application/json",
+            data: '',
+        })
+
+        ajax.done(function(res){
+            clear_form_data()
+            flash_message("Wishlist has been Deleted!")
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error!")
+        });
     });
 
     // ****************************************
