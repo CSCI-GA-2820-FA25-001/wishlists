@@ -32,6 +32,12 @@ Scenario: Create a Wishlist
     And the "Description" field should be empty
     And the "Category" field should be empty
 
+Scenario: Create a Wishlist with missing data
+    When I visit the "Home Page"
+    And I set the "Name" to "Test Wishlist"
+    And I press the "Create" button
+    Then I should see the message "customer_id"
+
 Scenario: List all wishlists
     When I visit the "Home Page"
     And I press the "List" button

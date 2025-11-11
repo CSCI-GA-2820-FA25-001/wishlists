@@ -26,11 +26,21 @@ from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Wishlists, WishlistItems
 from service.common import status
+from service.common.error_handlers import bad_request
 from service.models.persistent_base import DataValidationError
 
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
 STATE_CUSTOMER_ID = 1
+
+
+######################################################################
+# CONFIGURE ERROR HANDLING
+######################################################################
+@app.errorhandler(DataValidationError)
+def request_validation_error(error):
+    """Handles Value Errors from bad data"""
+    return bad_request(error)
 
 
 ######################################################################
