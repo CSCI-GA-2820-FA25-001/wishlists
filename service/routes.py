@@ -34,6 +34,15 @@ STATE_CUSTOMER_ID = 1
 
 
 ######################################################################
+# CONFIGURE ERROR HANDLING
+######################################################################
+@app.errorhandler(DataValidationError)
+def request_validation_error(error):
+    """Handles Value Errors from bad data"""
+    return bad_request(error)
+
+
+######################################################################
 # GET INDEX
 ######################################################################
 @app.route("/")

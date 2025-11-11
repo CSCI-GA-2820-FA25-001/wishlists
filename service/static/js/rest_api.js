@@ -167,7 +167,35 @@ $(function () {
     // ****************************************
 
     $("#create-btn").click(function () {
+        let name = $("#wishlist_name").val();
+        let customer_id = $("#wishlist_customer_id").val();
+        let category = $("#wishlist_category").val();
+        let description = $("#wishlist_description").val();
 
+        let data = {
+            "name": name,
+            "customer_id": parseInt(customer_id),
+            "category": category,
+            "description": description,
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "POST",
+            url: "/wishlists",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function(res){
+            clear_form_data()
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
     });
 
     // ****************************************
