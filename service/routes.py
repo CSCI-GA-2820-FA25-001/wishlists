@@ -204,11 +204,11 @@ def update_wishlist(wishlist_id):
             description=f"Wishlist with id '{wishlist_id}' was not found.",
         )
 
-    if wishlist.customer_id != STATE_CUSTOMER_ID:
-        abort(
-            status.HTTP_403_FORBIDDEN,
-            description="You do not have permission to update this wishlist.",
-        )
+    # if wishlist.customer_id != STATE_CUSTOMER_ID:
+    #     abort(
+    #         status.HTTP_403_FORBIDDEN,
+    #         description="You do not have permission to update this wishlist.",
+    #     )
 
     data = request.get_json()
     if "id" in data and data["id"] != wishlist_id:

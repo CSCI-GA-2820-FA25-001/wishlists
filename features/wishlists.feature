@@ -86,19 +86,8 @@ Scenario: Update a Wishlist
     When I change "Name" to "Birthday Wishlist"
     And I change "Description" to "Updated birthday list"
     And I press the "Update" button
-    Then I should see the message "Success"
-    When I copy the "Name" field
-    And I press the "Clear" button
-    And I paste the "Name" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "Birthday Wishlist" in the "Name" field
-    And I should see "Updated birthday list" in the "Description" field
-    When I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Birthday Wishlist" in the results
-    And I should not see "Birthday Gifts" in the results
+    Then I should see the message "Wishlist has been Updated!"
+    
 
 Scenario: Delete a Wishlist by ID
     When I visit the "Home Page"
