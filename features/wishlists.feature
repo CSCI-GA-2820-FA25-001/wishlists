@@ -76,7 +76,6 @@ Scenario: Search wishlists by name (partial match)
     And I should see "Birthday Gifts" in the results
     And I should not see "Holiday" in the results
 
-@update
 Scenario: Update a Wishlist
     When I visit the "Home Page"
     And I set the "Name" to "Birthday Gifts"
