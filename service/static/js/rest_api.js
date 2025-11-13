@@ -217,6 +217,34 @@ $(function () {
     // ****************************************
 
     $("#update-btn").click(function () {
+        let wishlist_id = $("#wishlist_id").val();
+        let name = $("#wishlist_name").val();
+        let description = $("#wishlist_description").val();
+        let category = $("#wishlist_category").val();
+
+        $("#flash_message").empty();
+
+        let data = {
+            "name": name,
+            "description": description,
+            "category": category
+        };
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/wishlists/${wishlist_id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function(res){
+            update_form_data(res);
+            flash_message("Wishlist has been Updated!");
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error when updating!");
+        });
         
     });
 

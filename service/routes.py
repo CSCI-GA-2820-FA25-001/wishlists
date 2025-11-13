@@ -31,7 +31,7 @@ from service.models.persistent_base import DataValidationError
 
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
-STATE_CUSTOMER_ID = 1
+STATE_CUSTOMER_ID = 1001
 
 
 ######################################################################
