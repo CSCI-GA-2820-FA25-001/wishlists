@@ -6,7 +6,7 @@ from datetime import date
 import factory
 from service.models import Wishlists, WishlistItems
 
-CUSTOMER_ID = 1
+CUSTOMER_ID = 1001
 
 
 class WishlistsFactory(factory.Factory):
