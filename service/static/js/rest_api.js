@@ -2,9 +2,9 @@ $(function () {
 
     let selectedWishlistId = null;
 
-    // ******************************************************
-    //  U T I L I T Y   F U N C T I O N S FOR WISHLIST
-    // ******************************************************
+    // ************************************************************
+    //  U T I L I T Y   F U N C T I O N S   F O R   W I S H L I S T
+    // ************************************************************
 
     // Updates the form with data from the response
     function update_form_data(res) {
@@ -101,9 +101,9 @@ $(function () {
 
     });
     
-    // ******************************************************
-    //  U T I L I T Y   F U N C T I O N S FOR WISHLIST ITEMS
-    // ******************************************************
+    // ************************************************************************
+    //  U T I L I T Y   F U N C T I O N S   F O R   W I S H L I S T   I T E M S
+    // ************************************************************************
 
     function render_items(items) {
         const $tbody = $("#items_results_body");
@@ -449,7 +449,6 @@ $(function () {
             flash_message(msg);
         });
 
-
     });
 
     // ****************************************
@@ -474,7 +473,46 @@ $(function () {
     // ****************************************
 
     $("#delete-item-btn").click(function () {
-    
+
+        if (!requireSelectedWishlist()) return;
+
+        const inputs = read_item_inputs();
+        const product_id = inputs.product_id;
+
+        if (!product_id) {
+            flash_message('Please enter a product id to delete');
+            return;
+        }
+
+        // make product_id an integer, fail if not valid
+        const product_id_int = parseInt(product_id);
+        if (isNaN(product_id_int)) {
+            flash_message('Please enter a valid product id (integer)');
+            return;
+        }
+
+        
+        // DELETE endpoint expects the product_id in the URL path
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            contentType: "application/json",
+            data: '',
+        });
+
+        ajax.done(function(res){
+            // Refresh items
+            $("#search-items-btn").click();
+            flash_message("Item deleted successfully");
+        }
+        );
+
+        ajax.fail(function(res){
+            var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when deleting item';
+            flash_message(msg);
+        });
+
+
     });
 
 
