@@ -101,3 +101,19 @@ Scenario: Delete a Wishlist by ID
     And I press the "Search" button
     Then I should see the message "Success"
     And I should not see "Electronics" in the results
+
+Scenario: Retrieve a wishlist item
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "888"
+    And I set the "Item Description" to "Database Systems"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I set the "Item ID" to "888"
+    And I press the "Retrieve Item" button
+    Then I should see the message "Item retrieved successfully"
+    And I should see "888" in the "Item ID" field
+    And I should see "Database Systems" in the "Item Description" field
