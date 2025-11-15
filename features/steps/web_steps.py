@@ -195,3 +195,47 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
     )
     element.clear()
     element.send_keys(text_string)
+
+
+@then('I should see "{text}" in the items results')
+def step_impl(context, text):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "items_results_body"), text
+        )
+    )
+    assert found
+
+
+@then('I should see "{first}" before "{second}" in the ordered items results')
+def step_impl(context, first, second):
+    driver = context.driver
+
+    tbody = WebDriverWait(driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, "items_results_body"))
+    )
+
+    rows = tbody.find_elements(By.TAG_NAME, "tr")
+    found_first = False
+    for row in rows:
+        cols = row.find_elements(By.TAG_NAME, "td")
+        if not cols:
+            continue
+        product_id = cols[0].text.strip()
+
+        if product_id == first:
+            found_first = True
+
+        if product_id == second:
+
+            assert found_first, f'"{first}" does not come before "{second}"'
+            return
+    assert False, f'Could not find both "{first}" and "{second}" in the items results'
+
+
+@then('I should not see "{text}" in the items results')
+def step_impl(context: Any, text: str) -> None:
+    element = context.driver.find_element(By.ID, "items_results_body")
+    assert (
+        text not in element.text
+    ), f"Did not expect to see '{text}' in items results, but it was found"
