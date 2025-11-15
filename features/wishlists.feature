@@ -101,3 +101,94 @@ Scenario: Delete a Wishlist by ID
     And I press the "Search" button
     Then I should see the message "Success"
     And I should not see "Electronics" in the results
+
+
+Scenario: Create a Wishlist Item for an existing wishlist
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "777"
+    And I set the "Item Description" to "C Programming Language"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    And I should see "777" in the items results
+    And I should see "C Programming Language" in the items results
+
+Scenario: Search wishlist items for an existing wishlist
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "888"
+    And I set the "Item Description" to "Operating Systems"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I press the "Search Items" button
+    Then I should see "888" in the items results
+    And I should see "Operating Systems" in the items results
+
+Scenario: Move a wishlist item to a different position
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I set the "Item ID" to "111"
+    And I set the "Item Description" to "First Book"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I set the "Item ID" to "222"
+    And I set the "Item Description" to "Second Book"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I press the "Search Items" button
+    Then I should see "111" in the items results
+    And I should see "222" in the items results
+    When I set the "Item ID" to "222"
+    And I set the "Item Before Position" to "1"
+    And I press the "Move Item" button
+    Then I should see the message "Item reordered successfully"
+    When I press the "Search Items" button
+    Then I should see "222" before "111" in the ordered items results
+
+Scenario: Delete a wishlist item
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "999"
+    And I set the "Item Description" to "Book to be deleted"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    And I should see "999" in the items results
+    When I set the "Item ID" to "999"
+    And I press the "Delete Item" button
+    Then I should see the message "Item deleted successfully"
+    When I press the "Search Items" button
+    Then I should not see "999" in the items results
+
+Scenario: Update a wishlist item description
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "555"
+    And I set the "Item Description" to "Original Description"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    And I should see "555" in the items results
+    And I should see "Original Description" in the items results
+    When I set the "Item ID" to "555"
+    And I set the "Item Description" to "Updated Description"
+    And I press the "Update Item" button
+    Then I should see the message "Item updated successfully"
+    When I press the "Search Items" button
+    Then I should see "555" in the items results
+    And I should see "Updated Description" in the items results
+    And I should not see "Original Description" in the items results
+
+
