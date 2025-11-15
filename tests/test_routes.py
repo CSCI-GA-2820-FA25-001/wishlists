@@ -63,6 +63,7 @@ class TestWishlistsService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
+        db.session.rollback()
         db.session.query(Wishlists).delete()  # clean up the last tests
         db.session.query(WishlistItems).delete()
         db.session.commit()
