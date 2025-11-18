@@ -506,8 +506,50 @@ $(function () {
     // ****************************************
 
     $("#retrieve_item-btn").click(function () {
+       if (!requireSelectedWishlist()) return;
 
+
+       const inputs = read_item_inputs()
+       const product_id = inputs.product_id;
+
+
+       if (!product_id) {
+           flash_message('Please enter a product id to retrieve');
+           return;
+       }
+
+
+       // make product_id an integer, fail if not valid
+       const product_id_int = parseInt(product_id);
+       if (isNaN(product_id_int)) {
+           flash_message('Please enter a valid product id (integer)');
+           return;
+       }
+
+
+       let ajax = $.ajax({
+           type: "GET",
+           url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+           contentType: "application/json",
+           data: ''
+       });
+
+
+       ajax.done(function(res){
+           // Refresh items
+           $("#wishlist_item_id").val(res.product_id);
+           $("#wishlist_item_description").val(res.description);
+           flash_message("Item retrieved successfully");
+       }
+       );
+
+
+       ajax.fail(function(res){
+           var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when retrieve item';
+           flash_message(msg);
+       });
     });
+
 
     // ****************************************
     // Delete a Wishlist Item
