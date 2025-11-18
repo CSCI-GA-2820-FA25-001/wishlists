@@ -61,8 +61,9 @@ class TestWishlistsModel(TestCase):
 
     def setUp(self):
         """This runs before each test"""
-        db.session.query(Wishlists).delete()  # clean up the last tests
+        db.session.rollback()
         db.session.query(WishlistItems).delete()
+        db.session.query(Wishlists).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):

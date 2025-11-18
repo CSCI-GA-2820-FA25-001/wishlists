@@ -2,9 +2,9 @@ $(function () {
 
     let selectedWishlistId = null;
 
-    // ******************************************************
-    //  U T I L I T Y   F U N C T I O N S FOR WISHLIST
-    // ******************************************************
+    // ************************************************************
+    //  U T I L I T Y   F U N C T I O N S   F O R   W I S H L I S T
+    // ************************************************************
 
     // Updates the form with data from the response
     function update_form_data(res) {
@@ -86,7 +86,7 @@ $(function () {
                 // select the wishlist so items panel is enabled
                 setSelectedWishlist(firstWishlist.id);
                 // auto-load items for the selected wishlist
-                $("#search-items-btn").click();
+                $("#search_items-btn").click();
             }
 
             flash_message("Success")
@@ -101,9 +101,9 @@ $(function () {
 
     });
     
-    // ******************************************************
-    //  U T I L I T Y   F U N C T I O N S FOR WISHLIST ITEMS
-    // ******************************************************
+    // ************************************************************************
+    //  U T I L I T Y   F U N C T I O N S   F O R   W I S H L I S T   I T E M S
+    // ************************************************************************
 
     function render_items(items) {
         const $tbody = $("#items_results_body");
@@ -135,19 +135,19 @@ $(function () {
 
     function read_item_inputs() {
         var v;
-        v = $("#item_product_id").val();
+        v = $("#wishlist_item_id").val();
         var product_id = v ? v.trim() : "";
-        v = $("#item_description").val();
+        v = $("#wishlist_item_description").val();
         var description = v ? v.trim() : "";
-        v = $("#item_before_position").val();
+        v = $("#wishlist_item_before_position").val();
         var before_position = v ? v.trim() : "";
-        return { product_id: product_id, description: description, before_position: before_position };
+        return { product_id: product_id, description: description, before_position: before_position};
     }
 
     function setSelectedWishlist(id) {
     selectedWishlistId = (typeof id !== 'undefined' && id !== null) ? id : null;
         const $panel = $("#items_panel");
-        const $controls = $("#search-items-btn, #create-item-btn, #update-item-btn, #delete-item-btn, #move-item-btn, #item_product_id");
+        const $controls = $("#search_items-btn, #create_item-btn, #update_item-btn, #delete_item-btn, #move_item-btn, #wishlist_item_id");
         const $tbody = $("#items_results_body");
         const $displayId = $("#item_wishlist_id");
 
@@ -158,13 +158,13 @@ $(function () {
             $controls.prop("disabled", false);
             if ($displayId.length) $displayId.val(String(selectedWishlistId));
             // Enable the search-items button for the selected wishlist
-            $("#search-items-btn").prop("disabled", false);
+            $("#search_items-btn").prop("disabled", false);
         } else {
             $panel.hide(); 
             $controls.prop("disabled", true);
             $tbody.empty();
             if ($displayId.length) $displayId.val("");
-            $("#search-items-btn").prop("disabled", true);
+            $("#search_items-btn").prop("disabled", true);
         }
     }
 
@@ -270,7 +270,7 @@ $(function () {
             update_form_data(res)
             setSelectedWishlist(res.id)
             // auto-load items when a wishlist is retrieved
-            $("#search-items-btn").click();
+            $("#search_items-btn").click();
             flash_message("Success")
         });
 
@@ -386,7 +386,7 @@ $(function () {
                 // enable items panel for this wishlist
                 setSelectedWishlist(firstWishlist.id)
                 // auto-load items for the selected wishlist
-                $("#search-items-btn").click();
+                $("#search_items-btn").click();
             }
 
             flash_message("Success")
@@ -406,7 +406,7 @@ $(function () {
     // Create a Wishlist Item
     // ****************************************
 
-    $("#create-item-btn").click(function () {
+    $("#create_item-btn").click(function () {
         if (!requireSelectedWishlist()) return;
 
         const inputs = read_item_inputs();
@@ -439,7 +439,7 @@ $(function () {
 
         ajax.done(function(res){
             // Refresh items
-            $("#search-items-btn").click();
+            $("#search_items-btn").click();
             flash_message("Item added successfully");
         }
         );
@@ -449,15 +449,55 @@ $(function () {
             flash_message(msg);
         });
 
-
     });
 
     // ****************************************
     // Update a Wishlist Item
     // ****************************************
 
-    $("#update-item-btn").click(function () {
+    $("#update_item-btn").click(function () {
+                if (!requireSelectedWishlist()) return;
+
+        const inputs = read_item_inputs();
+        const product_id = inputs.product_id;
+        const description = inputs.description;
+
+        if (!product_id) {
+            flash_message('Please enter a product id to update');
+            return;
+        }
+
+        // make product_id an integer, fail if not valid
+        const product_id_int = parseInt(product_id);
+        if (isNaN(product_id_int)) {
+            flash_message('Please enter a valid product id (integer)');
+            return;
+        }
+
         
+        let data = {
+            "product_id": product_id_int,
+            "description": description
+        };
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function(res){
+            // Refresh items
+            $("#search_items-btn").click();
+            flash_message("Item updated successfully");
+        }
+        );
+
+        ajax.fail(function(res){
+            var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when updating item';
+            flash_message(msg);
+        });
+
     });
 
 
@@ -515,8 +555,46 @@ $(function () {
     // Delete a Wishlist Item
     // ****************************************
 
-    $("#delete-item-btn").click(function () {
-    
+    $("#delete_item-btn").click(function () {
+        
+
+        if (!requireSelectedWishlist()) return;
+
+        const inputs = read_item_inputs();
+        const product_id = inputs.product_id;
+
+        if (!product_id) {
+            flash_message('Please enter a product id to delete');
+            return;
+        }
+
+        // make product_id an integer, fail if not valid
+        const product_id_int = parseInt(product_id);
+        if (isNaN(product_id_int)) {
+            flash_message('Please enter a valid product id (integer)');
+            return;
+        }
+
+        
+        // DELETE endpoint expects the product_id in the URL path
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            contentType: "application/json",
+            data: '',
+        });
+
+        ajax.done(function(res){
+            // Refresh items
+            $("#search_items-btn").click();
+            flash_message("Item deleted successfully");
+        }
+        );
+
+        ajax.fail(function(res){
+            var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when deleting item';
+            flash_message(msg);
+        });
     });
 
 
@@ -524,7 +602,7 @@ $(function () {
     // Search for a Wishlist Item
     // ****************************************
 
-    $("#search-items-btn").click(function () {
+    $("#search_items-btn").click(function () {
 
         if (!requireSelectedWishlist()) return;
 
@@ -539,7 +617,7 @@ $(function () {
 
         ajax.done(function(res){
             render_items(res);
-            flash_message("Success");
+            
         });
 
         ajax.fail(function(res){
@@ -554,7 +632,7 @@ $(function () {
     // Move for a Wishlist Item
     // ****************************************
 
-    $("#move-item-btn").click(function () {
+    $("#move_item-btn").click(function () {
 
         // Fallback: move via explicit product id + before_position input
         if (!requireSelectedWishlist()) return;
@@ -581,7 +659,7 @@ $(function () {
 
         ajax.done(function(res){
             // Refresh items
-            $("#search-items-btn").click();
+            $("#search_items-btn").click();
             flash_message('Item reordered successfully');
         });
 
@@ -678,7 +756,7 @@ $(function () {
 
                 ajax.done(function(res){
                     // Refresh items list after successful move
-                    $("#search-items-btn").click();
+                    $("#search_items-btn").click();
                     flash_message('Item reordered successfully');
                 });
 
