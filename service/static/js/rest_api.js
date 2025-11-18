@@ -455,8 +455,49 @@ $(function () {
     // Update a Wishlist Item
     // ****************************************
 
-    $("#update-item-btn").click(function () {
+    $("#update_item-btn").click(function () {
+                if (!requireSelectedWishlist()) return;
+
+        const inputs = read_item_inputs();
+        const product_id = inputs.product_id;
+        const description = inputs.description;
+
+        if (!product_id) {
+            flash_message('Please enter a product id to update');
+            return;
+        }
+
+        // make product_id an integer, fail if not valid
+        const product_id_int = parseInt(product_id);
+        if (isNaN(product_id_int)) {
+            flash_message('Please enter a valid product id (integer)');
+            return;
+        }
+
         
+        let data = {
+            "product_id": product_id_int,
+            "description": description
+        };
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function(res){
+            // Refresh items
+            $("#search_items-btn").click();
+            flash_message("Item updated successfully");
+        }
+        );
+
+        ajax.fail(function(res){
+            var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when updating item';
+            flash_message(msg);
+        });
+
     });
 
 
@@ -511,8 +552,6 @@ $(function () {
             var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Server error when deleting item';
             flash_message(msg);
         });
-
-
     });
 
 
