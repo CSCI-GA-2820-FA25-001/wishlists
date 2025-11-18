@@ -42,6 +42,8 @@ class Wishlists(db.Model, PersistentBase):
     wishlist_items = db.relationship(
         "WishlistItems",
         backref="wishlists",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
         lazy=True,
         order_by="WishlistItems.position",
     )
