@@ -455,7 +455,7 @@ $(function () {
     // Update a Wishlist Item
     // ****************************************
 
-    $("#update-item-btn").click(function () {
+    $("#update_item-btn").click(function () {
                 if (!requireSelectedWishlist()) return;
 
         const inputs = read_item_inputs();
@@ -488,7 +488,7 @@ $(function () {
 
         ajax.done(function(res){
             // Refresh items
-            $("#search-items-btn").click();
+            $("#search_items-btn").click();
             flash_message("Item updated successfully");
         }
         );
