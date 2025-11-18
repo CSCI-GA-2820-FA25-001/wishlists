@@ -472,7 +472,7 @@ $(function () {
     // Delete a Wishlist Item
     // ****************************************
 
-    $("#delete-item-btn").click(function () {
+    $("#delete_item-btn").click(function () {
 
         if (!requireSelectedWishlist()) return;
 
@@ -502,7 +502,7 @@ $(function () {
 
         ajax.done(function(res){
             // Refresh items
-            $("#search-items-btn").click();
+            $("#search_items-btn").click();
             flash_message("Item deleted successfully");
         }
         );
