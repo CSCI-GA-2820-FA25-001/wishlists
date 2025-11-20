@@ -201,4 +201,38 @@ Scenario: Update a wishlist item description
     And I should see "Updated Description" in the items results
     And I should not see "Original Description" in the items results
 
+Scenario: View items list with action buttons in a wishlist detail page (non-empty state)
+    When I visit the "Home Page"
+    And I set the "Name" to "Books"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Books" in the results
+    When I set the "Item ID" to "101"
+    And I set the "Item Description" to "Python Programming"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I set the "Item ID" to "102"
+    And I set the "Item Description" to "Data Structures"
+    And I press the "Create Item" button
+    Then I should see the message "Item added successfully"
+    When I press the "Search Items" button
+    Then I should see "101" in the items results
+    And I should see "Python Programming" in the items results
+    And I should see "102" in the items results
+    And I should see "Data Structures" in the items results
+
+Scenario: View empty state when wishlist has no items
+    When I visit the "Home Page"
+    And I set the "Customer ID" to "9999"
+    And I set the "Name" to "Empty Wishlist"
+    And I set the "Description" to "A wishlist with no items"
+    And I set the "Category" to "test"
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I set the "Name" to "Empty Wishlist"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I press the "Search Items" button
+    Then I should see "No items in this wishlist yet" in the items results
+
 

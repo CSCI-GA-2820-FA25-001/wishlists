@@ -160,12 +160,19 @@
 
           <!-- Items Table -->
           <div class="table-responsive" id="items_results">
-            <table class="table table-striped">
+            <div id="items_loading" style="display:none; text-align:center; padding:20px;">
+              <p>Loading items...</p>
+            </div>
+            <div id="items_error" style="display:none; text-align:center; padding:20px; color:#d9534f;">
+              <p>Error loading items. Please try again.</p>
+            </div>
+            <table class="table table-striped" id="items_table">
               <thead>
                 <tr>
                   <th>Product ID</th>
-                  <th>Position</th>
                   <th>Description</th>
+                  <th>Position</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="items_results_body"></tbody>

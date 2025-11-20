@@ -107,30 +107,92 @@ $(function () {
 
     function render_items(items) {
         const $tbody = $("#items_results_body");
+        const $table = $("#items_table");
+        const $loading = $("#items_loading");
+        const $error = $("#items_error");
+        
+        // Hide loading and error states
+        $loading.hide();
+        $error.hide();
+        
         $tbody.empty();
 
         if (!items || items.length === 0) {
-            $tbody.append('<tr><td colspan="3" style="opacity:.7;">(No items)</td></tr>');
+            // Show empty state with prompt to add first item
+            $tbody.append('<tr><td colspan="4" style="text-align:center; padding:30px; opacity:.7;"><em>No items in this wishlist yet. Add your first item using the form above.</em></td></tr>');
+            $table.show();
             return;
         }
 
+        $table.show();
         items.forEach(function (item) {
             var pid  = item.product_id || item.productId || item.id || "";
             var pos  = (item.position !== undefined && item.position !== null) ? item.position : (item.rank || "");
             var desc = item.description || item.desc || "";
 
-            // Render a draggable row and store product id & position in data attributes
+            // Render a draggable row with action buttons
             $tbody.append(`
             <tr draggable="true" data-product-id="${pid}" data-position="${pos}">
                 <td>${pid}</td>
-                <td>${pos}</td>
                 <td>${desc}</td>
+                <td>${pos}</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-item-btn" data-product-id="${pid}" data-description="${desc}">Edit</button>
+                    <button class="btn btn-sm btn-danger delete-item-btn" data-product-id="${pid}">Delete</button>
+                    <button class="btn btn-sm btn-default move-item-btn" data-product-id="${pid}">Move</button>
+                </td>
             </tr>
             `);
         });
 
         // Attach drag & drop handlers to newly rendered rows
         attachDragHandlers();
+        
+        // Attach click handlers for action buttons
+        attachItemActionHandlers();
+    }
+    
+    function show_items_loading() {
+        $("#items_loading").show();
+        $("#items_error").hide();
+        $("#items_table").hide();
+    }
+    
+    function show_items_error() {
+        $("#items_loading").hide();
+        $("#items_error").show();
+        $("#items_table").hide();
+    }
+    
+    function attachItemActionHandlers() {
+        // Edit button handler
+        $(".edit-item-btn").off("click").on("click", function() {
+            var productId = $(this).data("product-id");
+            var description = $(this).data("description");
+            $("#wishlist_item_id").val(productId);
+            $("#wishlist_item_description").val(description);
+            flash_message("Item loaded for editing. Modify and click 'Update Item'.");
+        });
+        
+        // Delete button handler
+        $(".delete-item-btn").off("click").on("click", function() {
+            var productId = $(this).data("product-id");
+            if (confirm("Are you sure you want to delete item " + productId + "?")) {
+                $("#wishlist_item_id").val(productId);
+                $("#delete_item-btn").click();
+            }
+        });
+        
+        // Move button handler
+        $(".move-item-btn").off("click").on("click", function() {
+            var productId = $(this).data("product-id");
+            var newPosition = prompt("Enter the position to move before (integer):");
+            if (newPosition !== null && newPosition.trim() !== "") {
+                $("#wishlist_item_id").val(productId);
+                $("#wishlist_item_before_position").val(newPosition);
+                $("#move_item-btn").click();
+            }
+        });
     }
 
     function read_item_inputs() {
@@ -608,6 +670,9 @@ $(function () {
 
         let wishlist_id = selectedWishlistId;
 
+        // Show loading state
+        show_items_loading();
+
         let ajax = $.ajax({
             type: "GET",
             url: `/wishlists/${wishlist_id}/items`,
@@ -621,6 +686,7 @@ $(function () {
         });
 
         ajax.fail(function(res){
+            show_items_error();
             var msg = (res && res.responseJSON && res.responseJSON.message) ? res.responseJSON.message : 'Error retrieving items';
             flash_message(msg);
         });
