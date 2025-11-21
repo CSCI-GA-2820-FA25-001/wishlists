@@ -24,6 +24,8 @@ and Delete Wishlists
 from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
+from flask_restx import Api, Resource, fields, reqparse, inputs
+
 from service.models import Wishlists, WishlistItems
 from service.common import status
 from service.common.error_handlers import bad_request
@@ -32,6 +34,20 @@ from service.models.persistent_base import DataValidationError
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
 STATE_CUSTOMER_ID = 1001
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(
+    app,
+    version="1.0.0",
+    title="Wishlists REST API Service",
+    description="Wishlist service API",
+    default="wishlists",
+    default_label="Wishlists operations",
+    doc="/apidocs",  # default also could use doc='/apidocs/'
+    prefix="/api",
+)
 
 
 ######################################################################
@@ -48,25 +64,6 @@ def request_validation_error(error):
 ######################################################################
 @app.route("/")
 def index():
-    # """Root URL response"""
-    # app.logger.info("Request for service metadata")
-    # return (
-    #     jsonify(
-    #         {
-    #             "name": "wishlists-service",
-    #             "version": "0.1.0",
-    #             "endpoints": [
-    #                 "/wishlists",
-    #                 "/wishlists/{id}",
-    #                 "/wishlists/{id}/items",
-    #                 "/wishlists/{id}/items/{item_id}",
-    #             ],
-    #             "docs": "See README for examples",
-    #         }
-    #     ),
-    #     status.HTTP_200_OK,
-    # )
-
     """Base URL for our service"""
     return app.send_static_file("index.html")
 
