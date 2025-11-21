@@ -24,7 +24,9 @@ and Delete Wishlists
 from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from flask_restx import Api, Resource, fields, reqparse, inputs
+
+# from flask_restx import Api, Resource, fields, reqparse, inputs
+from flask_restx import Api
 
 from service.models import Wishlists, WishlistItems
 from service.common import status
