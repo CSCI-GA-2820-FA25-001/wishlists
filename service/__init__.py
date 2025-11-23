@@ -20,6 +20,7 @@ and SQL database
 """
 import sys
 from flask import Flask
+from flask_restx import Api
 from service import config
 from service.common import log_handlers
 
@@ -33,6 +34,15 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(config)
 
+    # Initialize Flask-RESTX API
+    api = Api(
+        app,
+        version="1.0.0",
+        title="Wishlists REST API Service",
+        description="This is a REST API service for managing wishlists",
+        doc="/apidocs",
+    )
+
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
     from service.models import db
@@ -43,6 +53,10 @@ def create_app():
         # pylint: disable=wrong-import-position, wrong-import-order, unused-import
         from service import routes, models  # noqa: F401 E402
         from service.common import error_handlers, cli_commands  # noqa: F401, E402
+
+        # Register namespace with /api prefix
+        from service.routes import wishlist_ns
+        api.add_namespace(wishlist_ns, path="/api/wishlists")
 
         try:
             db.create_all()
