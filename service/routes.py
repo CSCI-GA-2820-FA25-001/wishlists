@@ -15,18 +15,31 @@
 ######################################################################
 
 """
-Wishlists Service
+Wishlists Service with Swagger
 
-This service implements a REST API that allows you to Create, Read, Update
-and Delete Wishlists
+Paths:
+------
+GET / - Displays the UI
+GET /api/wishlists - Returns a list all of the Wishlists
+GET /api/wishlists/{id} - Returns the Wishlist with a given id number
+POST /api/wishlists - Creates a new Wishlist
+PUT /api/wishlists/{id} - Updates a Wishlist
+DELETE /api/wishlists/{id} - Deletes a Wishlist
+
+GET /api/wishlists/{id}/items - Returns all items in a Wishlist
+GET /api/wishlists/{id}/items/{product_id} - Returns a specific item
+POST /api/wishlists/{id}/items - Adds a new item to a Wishlist
+PUT /api/wishlists/{id}/items/{product_id} - Updates an item
+DELETE /api/wishlists/{id}/items/{product_id} - Deletes an item
+PATCH /api/wishlists/{id}/items/{product_id} - Moves an item
 """
 
 from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 
-# from flask_restx import Api, Resource, fields, reqparse, inputs
-from flask_restx import Api
+from flask_restx import Api, Resource, fields, reqparse
+
 
 from service.models import Wishlists, WishlistItems
 from service.common import status
@@ -37,6 +50,7 @@ from service.models.persistent_base import DataValidationError
 # For now, a hardcoded value is used
 STATE_CUSTOMER_ID = 1001
 
+
 ######################################################################
 # Configure Swagger before initializing it
 ######################################################################
@@ -44,7 +58,7 @@ api = Api(
     app,
     version="1.0.0",
     title="Wishlists REST API Service",
-    description="Wishlist service API",
+    description="This is a REST API service for managing wishlists",
     default="wishlists",
     default_label="Wishlists operations",
     doc="/apidocs",  # default also could use doc='/apidocs/'
@@ -78,6 +92,289 @@ def health():
     """Health Check"""
     app.logger.info("Request for health check")
     return jsonify({"status": "OK"}), status.HTTP_200_OK
+
+
+# Define the model so that the docs reflect what can be sent
+wishlist_create_model = api.model(
+    "Wishlist",
+    {
+        "name": fields.String(required=True, description="The name of the Wishlist"),
+        "customer_id": fields.Integer(required=True, description="Customer identifier"),
+        "category": fields.String(required=False, description="Wishlist category"),
+        "description": fields.String(
+            required=False, description="Description of the Wishlist"
+        ),
+        "created_date": fields.Date(required=False, description="Creation date"),
+    },
+)
+
+wishlist_model = api.inherit(
+    "WishlistModel",
+    wishlist_create_model,
+    {
+        "id": fields.Integer(
+            readOnly=True,
+            description="The unique id assigned internally by the service",
+        ),
+        "updated_date": fields.String(
+            readOnly=True, description="Last updated date (ISO format)"
+        ),
+    },
+)
+
+wishlist_item_create_model = api.model(
+    "WishlistItem",
+    {
+        "product_id": fields.Integer(required=True, description="Product ID"),
+        "description": fields.String(required=False, description="Item description"),
+    },
+)
+
+wishlist_item_model = api.inherit(
+    "WishlistItemModel",
+    wishlist_item_create_model,
+    {
+        "wishlist_id": fields.Integer(
+            readOnly=True, description="The ID of the wishlist this item belongs to"
+        ),
+        "position": fields.Integer(
+            readOnly=True, description="Position of the item within the wishlist"
+        ),
+    },
+)
+
+# query string arguments
+wishlist_args = reqparse.RequestParser()
+
+wishlist_args.add_argument(
+    "customer_id",
+    type=int,
+    location="args",
+    required=False,
+    help="List Wishlists by customer_id",
+)
+
+wishlist_args.add_argument(
+    "name",
+    type=str,
+    location="args",
+    required=False,
+    help="List Wishlists by name",
+)
+
+wishlist_args.add_argument(
+    "category",
+    type=str,
+    location="args",
+    required=False,
+    help="List Wishlists by category",
+)
+
+
+######################################################################
+#  PATH: /wishlists/{id}
+######################################################################
+@api.route("/wishlists/<int:wishlist_id>")
+@api.param("wishlist_id", "The Wishlist identifier")
+class WishlistResource(Resource):
+    """
+    WishlistResource class
+
+    Allows the manipulation of a single Wishlist
+    GET /wishlists/{id} - Returns a Wishlist with the id
+    PUT /wishlists/{id} - Update a Wishlist with the id
+    DELETE /wishlists/{id} -  Deletes a Wishlist with the id
+    """
+
+    # ------------------------------------------------------------------
+    # RETRIEVE A WISHLIST
+    # ------------------------------------------------------------------
+    @api.doc("get_wishlist")
+    @api.response(404, "Wishlist not found")
+    @api.marshal_with(wishlist_model)
+    def get(self, wishlist_id):
+        """
+        Retrieve a single Wishlist
+
+        This endpoint will return a Wishlist based on its id.
+        """
+
+    # ------------------------------------------------------------------
+    # Update AN EXISTING WISHLIST
+    # ------------------------------------------------------------------
+    @api.doc("update_wishlist")
+    @api.response(404, "Wishlist not found")
+    @api.response(400, "The posted Wishlist data was not valid")
+    @api.expect(wishlist_create_model)
+    @api.marshal_with(wishlist_model)
+    def put(self, wishlist_id):
+        """
+        Update a Wishlist
+
+        This endpoint will update a Wishlist based on the body that is posted.
+        """
+
+    # ------------------------------------------------------------------
+    # Delete A WISHLIST
+    # ------------------------------------------------------------------
+    @api.doc("delete_wishlist")
+    @api.response(204, "Wishlist deleted")
+    def delete(self, wishlist_id):
+        """
+        Delete a Wishlist
+
+        This endpoint will delete a Wishlist based the id specified in the path
+        """
+
+
+######################################################################
+#  PATH: /wishlists
+######################################################################
+@api.route("/wishlists", strict_slashes=False)
+class WishlistCollection(Resource):
+    """Handles all interactions with collections of Wishlists"""
+
+    # ------------------------------------------------------------------
+    # LIST ALL WISHLISTS
+    # ------------------------------------------------------------------
+    @api.doc("list_wishlists")
+    @api.expect(wishlist_args, validate=True)
+    @api.marshal_list_with(wishlist_model)
+    def get(self):
+        """Returns all of the Wishlists"""
+
+    # ------------------------------------------------------------------
+    # ADD A NEW WISHLIST
+    # ------------------------------------------------------------------
+    @api.doc("create_wishlist")
+    @api.response(400, "The posted data was not valid")
+    @api.expect(wishlist_create_model)
+    @api.marshal_with(wishlist_model, code=201)
+    def post(self):
+        """
+        Creates a Wishlist
+        This endpoint will create a Wishlist based the data in the body that is posted
+        """
+
+
+######################################################################
+#  PATH: /wishlists/{wishlist_id}/items/{product_id}
+######################################################################
+@api.route("/wishlists/<int:wishlist_id>/items/<int:product_id>")
+@api.param("wishlist_id", "The Wishlist identifier")
+@api.param("product_id", "The Product identifier")
+class WishlistItemResource(Resource):
+    """
+    WishlistItemResource class
+
+    Allows the manipulation of a single Wishlist Item
+    GET /wishlists/{wishlist_id}/items/{product_id} - Returns a Wishlist Item
+    PUT /wishlists/{wishlist_id}/items/{product_id} - Updates a Wishlist Item
+    DELETE /wishlists/{wishlist_id}/items/{product_id} - Deletes a Wishlist Item
+    PATCH /wishlists/{wishlist_id}/items/{product_id} - Moves a Wishlist Item to a new position
+    """
+
+    # ------------------------------------------------------------------
+    # RETRIEVE A WISHLIST ITEM
+    # ------------------------------------------------------------------
+    @api.doc("get_wishlist_item")
+    @api.response(404, "Wishlist or Wishlist Item not found")
+    @api.marshal_with(wishlist_item_model)
+    def get(self, wishlist_id, product_id):
+        """
+        Retrieve a single Wishlist Item
+
+        This endpoint will return a Wishlist Item based on it's id
+        """
+
+    # ------------------------------------------------------------------
+    # Update A WISHLIST ITEM
+    # ------------------------------------------------------------------
+    @api.doc("update_wishlist_item")
+    @api.response(404, "Wishlist or Wishlist Item not found")
+    @api.response(400, "Invalid request body")
+    @api.expect(wishlist_item_create_model)
+    @api.marshal_with(wishlist_item_model)
+    def put(self, wishlist_id, product_id):
+        """
+        Update a Wishlist Item
+
+        This endpoint will update a Wishlist Item based the body that is posted
+        """
+
+    # ------------------------------------------------------------------
+    # Delete A WISHLIST ITEM
+    # ------------------------------------------------------------------
+    @api.doc("delete_wishlist_item")
+    @api.response(204, "Wishlist Item deleted")
+    def delete(self, wishlist_id, product_id):
+        """
+        Delete a Wishlist Item
+
+        This endpoint will delete a Wishlist Item based the id specified in the path
+        """
+
+    # ------------------------------------------------------------------
+    # MOVE A WISHLIST ITEM
+    # ------------------------------------------------------------------
+    @api.doc("move_wishlist_item")
+    @api.response(400, "Invalid request body")
+    @api.response(404, "Wishlist or Wishlist Item not found")
+    def patch(self, wishlist_id, product_id):
+        """
+        Move a Wishlist Item
+
+        This endpoint will Move a Wishlist Item based the id specified in the path
+        """
+
+
+######################################################################
+#  PATH: /wishlists/{wishlist_id}/items
+######################################################################
+@api.route("/wishlists/<int:wishlist_id>/items", strict_slashes=False)
+@api.param("wishlist_id", "The Wishlist identifier")
+class WishlistItemCollection(Resource):
+    """Handles all interactions with collections of Wishlist Items"""
+
+    # ------------------------------------------------------------------
+    # LIST ALL ITEMS IN A WISHLIST
+    # ------------------------------------------------------------------
+    @api.doc("list_wishlist_items")
+    @api.response(404, "Wishlist or Wishlist Item not found")
+    @api.marshal_list_with(wishlist_item_model)
+    def get(self, wishlist_id):
+        """Returns all of the Wishlist Items"""
+
+    # ------------------------------------------------------------------
+    # ADD A NEW WISHLIST ITEM
+    # ------------------------------------------------------------------
+    @api.doc("create_wishlist_item")
+    @api.response(400, "Invalid request body")
+    @api.response(404, "Wishlist or Wishlist Item not found")
+    @api.response(409, "Product already exists in wishlist")
+    @api.expect(wishlist_item_create_model)
+    @api.marshal_with(wishlist_item_model, code=201)
+    def post(self, wishlist_id):
+        """
+        Creates a Wishlist item
+        This endpoint will create a Wishlist item based the data in the body that is posted
+        """
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+# def abort(error_code: int, message: str):
+#     """Logs errors before aborting"""
+#     app.logger.error(message)
+#     api.abort(error_code, message)
+
+
+# def data_reset():
+#     """Removes all Wishlists from the database"""
+#     Wishlists.remove_all()
+#     WishlistItems.remove_all()
 
 
 ######################################################################
