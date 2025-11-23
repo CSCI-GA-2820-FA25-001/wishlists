@@ -24,6 +24,7 @@ and Delete Wishlists
 from datetime import date
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
+from flask_restx import Api, Resource, fields, reqparse, inputs
 from service.models import Wishlists, WishlistItems
 from service.common import status
 from service.common.error_handlers import bad_request
@@ -32,6 +33,18 @@ from service.models.persistent_base import DataValidationError
 # It should be based on the authenticated user
 # For now, a hardcoded value is used
 STATE_CUSTOMER_ID = 1001
+######################################################################
+# CONFIGURE SWAGGER
+######################################################################
+api = Api(
+    app,
+    version="1.0.0",
+    title="Wishlist Service API",
+    description="A simple service to manage user wishlists",
+    default="wishlists",
+    default_label="Wishlist operations",
+    doc="/apidocs/",
+)
 
 
 ######################################################################
