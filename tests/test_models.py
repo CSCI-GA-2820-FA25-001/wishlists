@@ -698,3 +698,25 @@ class TestWishlistsModel(TestCase):
             with self.assertRaises(Exception) as context:
                 Wishlists.move_item(wishlist.id, item_2.product_id, 500)
             self.assertTrue("DB Error" in str(context.exception))
+
+    def test_update_wishlist_item_with_empty_wishlist_id(self):
+        """It should raise DataValidationError when updating with empty wishlist_id"""
+        item = WishlistItems()
+        item.wishlist_id = None
+        item.product_id = 123
+        item.description = "test"
+        item.position = 1000
+
+        with self.assertRaises(DataValidationError):
+            item.update()
+
+    def test_update_wishlist_item_with_empty_product_id(self):
+        """It should raise DataValidationError when updating with empty product_id"""
+        item = WishlistItems()
+        item.wishlist_id = 1
+        item.product_id = None
+        item.description = "test"
+        item.position = 1000
+
+        with self.assertRaises(DataValidationError):
+            item.update()

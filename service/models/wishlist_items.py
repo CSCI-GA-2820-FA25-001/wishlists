@@ -94,3 +94,17 @@ class WishlistItems(db.Model, PersistentBase):
             .first()
         )
         return item.position if item else 0
+
+    def update(self) -> None:
+        """
+        Updates a WishlistItem in the database
+
+        This method overrides the PersistentBase.update() because
+        WishlistItems uses a composite primary key instead of a single id.
+        """
+        logger.info("Updating %s", self)
+        if not self.wishlist_id or not self.product_id:
+            raise DataValidationError(
+                "Update called with empty wishlist_id or product_id"
+            )
+        db.session.commit()
