@@ -654,9 +654,3 @@ def abort(error_code: int, message: str):
     """Logs errors before aborting"""
     app.logger.error(message)
     api.abort(error_code, message)
-
-
-def data_reset():
-    """Removes all Wishlists from the database"""
-    Wishlists.remove_all()
-    WishlistItems.remove_all()
