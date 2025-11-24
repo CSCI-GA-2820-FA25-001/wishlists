@@ -23,14 +23,11 @@ import os
 import logging
 from datetime import date
 from unittest import TestCase
+from unittest.mock import patch
 from wsgi import app
 from service.common import status
-from service.models import db
-from service.models import Wishlists, WishlistItems
-from tests.factories import WishlistsFactory, WishlistItemsFactory
-from tests.factories import CUSTOMER_ID
-from service.models import DataValidationError
-from unittest.mock import patch
+from service.models import db, Wishlists, WishlistItems, DataValidationError
+from tests.factories import WishlistsFactory, WishlistItemsFactory, CUSTOMER_ID
 
 
 DATABASE_URI = os.getenv(
@@ -807,7 +804,7 @@ class TestWishlistsService(TestCase):
             data=str(wishlist_item.serialize()),
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-    
+
     def test_add_wishlist_item_bad_request_body(self):
         """It should return 400 when request body is invalid"""
         wishlist = self._create_wishlists(1)[0]
@@ -819,7 +816,7 @@ class TestWishlistsService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_add_wishlist_item_conflict(self):
         """It should return 409 when product already exists in wishlist"""
         wishlist = self._create_wishlists(1)[0]
@@ -965,7 +962,7 @@ class TestWishlistsService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_move_wishlist_item_datavalidation_error(self):
         """It should return 400 when move_item raises DataValidationError"""
         wishlist = WishlistsFactory()
@@ -981,5 +978,4 @@ class TestWishlistsService(TestCase):
                 json=data,
                 content_type="application/json",
             )
-
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
