@@ -606,6 +606,7 @@ class TestWishlistsService(TestCase):
         # Delete the same id again, still return 204
         resp = self.client.delete(f"{BASE_URL}/{wishlist.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+    
 
     # ######################################################################
     # #  Wishlist Items

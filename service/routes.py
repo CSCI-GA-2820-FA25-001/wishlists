@@ -490,10 +490,10 @@ def abort(error_code: int, message: str):
     api.abort(error_code, message)
 
 
-def data_reset():
-    """Removes all Wishlists from the database"""
-    Wishlists.remove_all()
-    WishlistItems.remove_all()
+# def data_reset():
+#     """Removes all Wishlists from the database"""
+#     Wishlists.remove_all()
+#     WishlistItems.remove_all()
 
 
 ######################################################################
