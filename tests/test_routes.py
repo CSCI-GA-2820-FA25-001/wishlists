@@ -27,11 +27,7 @@ from wsgi import app
 from service.common import status
 from service.models import db
 from service.models import Wishlists, WishlistItems
-
-
-# from tests.factories import WishlistsFactory, WishlistItemsFactory
-from tests.factories import WishlistsFactory
-from tests.factories import WishlistItemsFactory
+from tests.factories import WishlistsFactory, WishlistItemsFactory
 from tests.factories import CUSTOMER_ID
 
 
@@ -698,6 +694,23 @@ class TestWishlistsService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_wishlist_item_wishlist_not_found(self):
+        """It should return 404 when deleting an item from a non-existent wishlist"""
+        resp = self.client.delete(
+            f"{BASE_URL}/9999/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_wishlist_item_not_found(self):
+        """It should return 404 when deleting a non-existent wishlist item"""
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.delete(
+            f"{BASE_URL}/{wishlist.id}/items/9999",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_list_wishlist_items(self):
         """It should List wishlist items for a wishlist"""
