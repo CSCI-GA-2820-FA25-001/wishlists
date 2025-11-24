@@ -41,7 +41,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/wishlists`,
+            url: `/api/wishlists`,
             contentType: "application/json",
             data: ''
         })
@@ -259,7 +259,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: "/wishlists",
+            url: "/api/wishlists",
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -294,7 +294,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/wishlists/${wishlist_id}`,
+            url: `/api/wishlists/${wishlist_id}`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -322,7 +322,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/wishlists/${wishlist_id}`,
+            url: `/api/wishlists/${wishlist_id}`,
             contentType: "application/json",
             data: ''
         })
@@ -356,7 +356,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `/wishlists/${wishlist_id}`,
+            url: `/api/wishlists/${wishlist_id}`,
             contentType: "application/json",
             data: '',
         })
@@ -414,7 +414,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/wishlists?${queryString}`,
+            url: `/api/wishlists?${queryString}`,
             contentType: "application/json",
             data: ''
         })
@@ -494,7 +494,7 @@ $(function () {
         };
         let ajax = $.ajax({
             type: "POST",
-            url: `/wishlists/${selectedWishlistId}/items`,
+            url: `/api/wishlists/${selectedWishlistId}/items`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -543,7 +543,7 @@ $(function () {
         };
         let ajax = $.ajax({
             type: "PUT",
-            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            url: `/api/wishlists/${selectedWishlistId}/items/${product_id_int}`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -591,7 +591,7 @@ $(function () {
 
        let ajax = $.ajax({
            type: "GET",
-           url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+           url: `/api/wishlists/${selectedWishlistId}/items/${product_id_int}`,
            contentType: "application/json",
            data: ''
        });
@@ -641,7 +641,7 @@ $(function () {
         // DELETE endpoint expects the product_id in the URL path
         let ajax = $.ajax({
             type: "DELETE",
-            url: `/wishlists/${selectedWishlistId}/items/${product_id_int}`,
+            url: `/api/wishlists/${selectedWishlistId}/items/${product_id_int}`,
             contentType: "application/json",
             data: '',
         });
@@ -675,7 +675,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/wishlists/${wishlist_id}/items`,
+            url: `/api/wishlists/${wishlist_id}/items`,
             contentType: "application/json",
             data: ''
         })
@@ -718,7 +718,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: 'PATCH',
-            url: `/wishlists/${selectedWishlistId}/items/${product_id}`,
+            url: `/api/wishlists/${selectedWishlistId}/items/${product_id}`,
             contentType: 'application/json',
             data: JSON.stringify({ before_position: parseInt(before_position) })
         });
@@ -815,7 +815,7 @@ $(function () {
                 // Send PATCH to move dragged item before the computed position
                 var ajax = $.ajax({
                     type: 'PATCH',
-                    url: '/wishlists/' + selectedWishlistId + '/items/' + draggedProductId,
+                    url: '/api/wishlists/' + selectedWishlistId + '/items/' + draggedProductId,
                     contentType: 'application/json',
                     data: JSON.stringify({ before_position: parseInt(beforePos, 10) })
                 });
