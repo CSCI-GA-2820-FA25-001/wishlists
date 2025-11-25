@@ -23,19 +23,18 @@ import os
 import logging
 from datetime import date
 from unittest import TestCase
+from unittest.mock import patch
 from wsgi import app
 from service.common import status
-from service.models import db
-from service.models import Wishlists, WishlistItems
-from tests.factories import WishlistsFactory, WishlistItemsFactory
-from tests.factories import CUSTOMER_ID
+from service.models import db, Wishlists, WishlistItems, DataValidationError
+from tests.factories import WishlistsFactory, WishlistItemsFactory, CUSTOMER_ID
 
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
-BASE_URL = "/wishlists"
+BASE_URL = "/api/wishlists"
 
 
 ######################################################################
@@ -695,6 +694,23 @@ class TestWishlistsService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_delete_wishlist_item_wishlist_not_found(self):
+        """It should return 404 when deleting an item from a non-existent wishlist"""
+        resp = self.client.delete(
+            f"{BASE_URL}/9999/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_wishlist_item_not_found(self):
+        """It should return 404 when deleting a non-existent wishlist item"""
+        wishlist = self._create_wishlists(1)[0]
+        resp = self.client.delete(
+            f"{BASE_URL}/{wishlist.id}/items/9999",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_list_wishlist_items(self):
         """It should List wishlist items for a wishlist"""
         wishlist = self._create_wishlists(1)[0]
@@ -788,6 +804,36 @@ class TestWishlistsService(TestCase):
             data=str(wishlist_item.serialize()),
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_add_wishlist_item_bad_request_body(self):
+        """It should return 400 when request body is invalid"""
+        wishlist = self._create_wishlists(1)[0]
+        bad_data = {}
+
+        resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            json=bad_data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_wishlist_item_conflict(self):
+        """It should return 409 when product already exists in wishlist"""
+        wishlist = self._create_wishlists(1)[0]
+        wishlist_item = WishlistItemsFactory()
+        payload = wishlist_item.serialize()
+        first_resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            json=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(first_resp.status_code, status.HTTP_201_CREATED)
+        second_resp = self.client.post(
+            f"{BASE_URL}/{wishlist.id}/items",
+            json=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(second_resp.status_code, status.HTTP_409_CONFLICT)
 
     def test_add_wishlist_item_wrong_content_type(self):
         """It should return 415 when Content-Type is not application/json"""
@@ -889,6 +935,18 @@ class TestWishlistsService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_move_wishlist_item_item_not_found(self):
+        """It should return 404 when moving a non-existent wishlist item"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        data = {"before_position": 0}
+        resp = self.client.patch(
+            f"{BASE_URL}/{wishlist.id}/items/9999",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_move_wishlist_item_invalid_data(self):
         """It should return 400 when moving an item with invalid data"""
         wishlist = WishlistsFactory()
@@ -903,4 +961,21 @@ class TestWishlistsService(TestCase):
             json=data,
             content_type="application/json",
         )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_move_wishlist_item_datavalidation_error(self):
+        """It should return 400 when move_item raises DataValidationError"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        wishlist_item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        wishlist_item.create()
+        data = {"before_position": 0}
+        with patch("service.routes.Wishlists.move_item") as mock_move:
+            mock_move.side_effect = DataValidationError("Bad move")
+
+            resp = self.client.patch(
+                f"{BASE_URL}/{wishlist.id}/items/{wishlist_item.product_id}",
+                json=data,
+                content_type="application/json",
+            )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
