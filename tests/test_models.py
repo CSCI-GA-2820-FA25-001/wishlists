@@ -720,3 +720,18 @@ class TestWishlistsModel(TestCase):
 
         with self.assertRaises(DataValidationError):
             item.update()
+
+    def test_delete_nonempty_wishlist(self):
+        """It should delete a Wishlist with items in it"""
+        wishlist = WishlistsFactory()
+        wishlist.create()
+        self.assertIsNotNone(wishlist.id)
+        item = WishlistItemsFactory(wishlist_id=wishlist.id)
+        item.create()
+        self.assertIsNotNone(item.wishlist_id)
+        self.assertIsNotNone(item.product_id)
+        found_items = WishlistItems.find_all_by_wishlist_id(wishlist.id)
+        self.assertEqual(len(found_items), 1)
+        wishlist.delete()
+        found = Wishlists.find_by_id(wishlist.id)
+        self.assertIsNone(found)
