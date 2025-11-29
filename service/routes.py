@@ -66,7 +66,7 @@ api = Api(
 ######################################################################
 # CONFIGURE ERROR HANDLING
 ######################################################################
-@app.errorhandler(DataValidationError)
+@api.errorhandler(DataValidationError)
 def request_validation_error(error):
     """Handles Value Errors from bad data"""
     return bad_request(error)
