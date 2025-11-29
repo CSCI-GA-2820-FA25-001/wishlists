@@ -31,7 +31,9 @@ class WishlistItems(db.Model, PersistentBase):
 
     __tablename__ = "wishlist_items"
 
-    wishlist_id = db.Column(db.Integer, db.ForeignKey("wishlists.id"), primary_key=True)
+    wishlist_id = db.Column(
+        db.Integer, db.ForeignKey("wishlists.id", ondelete="CASCADE"), primary_key=True
+    )
     product_id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(255))
     position = db.Column(db.Integer, nullable=False)
