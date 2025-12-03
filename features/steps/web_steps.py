@@ -215,21 +215,28 @@ def step_impl(context, first, second):
         expected_conditions.presence_of_element_located((By.ID, "items_results_body"))
     )
 
+    WebDriverWait(driver, context.wait_seconds).until(
+        lambda d: first in d.find_element(By.ID, "items_results_body").text 
+               and second in d.find_element(By.ID, "items_results_body").text
+    )
+
+    tbody = driver.find_element(By.ID, "items_results_body")
     rows = tbody.find_elements(By.TAG_NAME, "tr")
-    found_first = False
+
+    product_ids = []
     for row in rows:
         cols = row.find_elements(By.TAG_NAME, "td")
-        if not cols:
-            continue
-        product_id = cols[0].text.strip()
-
+        if cols:
+            product_ids.append(cols[0].text.strip())
+    
+    found_first = False
+    for product_id in product_ids:
         if product_id == first:
             found_first = True
-
         if product_id == second:
-
             assert found_first, f'"{first}" does not come before "{second}"'
             return
+    
     assert False, f'Could not find both "{first}" and "{second}" in the items results'
 
 
