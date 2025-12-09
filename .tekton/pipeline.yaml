@@ -15,6 +15,10 @@ spec:
       description: Name of the application
       name: APP_NAME
       type: string
+    - default: 'https://wishlists-yw9153-dev.apps.rm2.thpm.p1.openshiftapps.com/'
+      description: Public route of the deployed application for Behave tests
+      name: BASE_URL
+      type: string
     - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
       description: The name of the image to build
       name: IMAGE_NAME
@@ -149,6 +153,22 @@ spec:
       taskRef:
         kind: Task
         name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: behave
+      params:
+        - name: base-url
+          value: $(params.BASE_URL)
+        - name: wait-seconds
+          value: "60"
+        - name: driver
+          value: "chrome"
+      runAfter:
+        - deploy-image
+      taskRef:
+        kind: Task
+        name: behave
       workspaces:
         - name: source
           workspace: pipeline-workspace

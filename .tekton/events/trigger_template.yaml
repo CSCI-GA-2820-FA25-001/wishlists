@@ -11,6 +11,9 @@ spec:
       default: master
     - name: git-repo-name
       description: The name of the deployment to be created / patched
+    - name: base-url
+      description: Public route of the deployed application for Behave tests
+      default: "https://wishlists-yw9153-dev.apps.rm2.thpm.p1.openshiftapps.com/"
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
@@ -27,6 +30,8 @@ spec:
             value: $(tt.params.git-repo-url)
           - name: IMAGE_NAME
             value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(tt.params.git-repo-name):$(tt.params.git-revision)
+          - name: BASE_URL
+            value: $(tt.params.base-url)
         workspaces:
           - name: pipeline-workspace
             volumeClaimTemplate:
